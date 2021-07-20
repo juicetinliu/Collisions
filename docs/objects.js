@@ -121,10 +121,12 @@ class Line extends Thing{
                 return false;
         }
     }
+
+    collide(){}
 }
 
 class Circle extends Thing{
-    constructor(pos = [0, 0], vel = [0, 0], acc = [0, 0], rad, mass = 0){
+    constructor(pos = [0, 0], vel = [0, 0], acc = [0, 0], rad, mass = rad){
         super(mass, Thingtype.CIRCLE);
         this.pos = to_2d_vector(pos);
         this.vel = to_2d_vector(vel);
@@ -139,7 +141,7 @@ class Circle extends Thing{
     }
 
     intersects(other){
-        switch(other.type) {
+        switch(other.type){
             case Thingtype.POINT:
                 return intersect_point_circle(other.pos, this.pos, this.rad);
             
@@ -159,11 +161,35 @@ class Circle extends Thing{
 
     collide(other){
         if(this.intersects(other)){
-            let line_dir = other.pos_b.copy().sub(other.pos_a);
-            let normal = createVector(-line_dir.y, line_dir.x).normalize();
-            let new_vel = this.vel.copy().sub(normal.mult(2 * this.vel.copy().dot(normal)));
+            switch(other.type){
+                case Thingtype.CIRCLE:
+                    let total_mass = this.mass + other.mass;
+                    let vel_diff = this.vel.copy().sub(other.vel);
+                    let pos_diff = this.pos.copy().sub(other.pos);
 
-            this.setVel([new_vel.x, new_vel.y]);
+                    let o_vel_diff = other.vel.copy().sub(this.vel);
+                    let o_pos_diff = other.pos.copy().sub(this.pos);
+                    
+                    let this_new_vel = this.vel.copy().sub(pos_diff.copy().mult(2 * other.mass * vel_diff.copy().dot(pos_diff) / (pos_diff.magSq() * total_mass)));
+
+                    let other_new_vel = other.vel.copy().sub(o_pos_diff.copy().mult(2 * other.mass * o_vel_diff.copy().dot(o_pos_diff) / (o_pos_diff.magSq() * total_mass)))
+
+                    this.setVel([this_new_vel.x, this_new_vel.y]);
+                    other.setVel([other_new_vel.x, other_new_vel.y]);
+
+                    return;
+    
+                case Thingtype.LINE:
+                    let line_dir = other.pos_b.copy().sub(other.pos_a);
+                    let normal = createVector(-line_dir.y, line_dir.x).normalize();
+                    let new_vel = this.vel.copy().sub(normal.mult(2 * this.vel.copy().dot(normal)));
+
+                    this.setVel([new_vel.x, new_vel.y]);
+                    return;
+            
+                default:
+                    return;
+            }
         }
     }
 }
