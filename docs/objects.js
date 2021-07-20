@@ -152,7 +152,7 @@ class Circle extends Thing{
                 return intersect_circle_rect(this.pos, this.rad, other.pos, other.w, other.h);
 
             case Thingtype.LINE:
-                return intersect_circle_line(this.pos, this.rad, other.pos_a, other.pos_b);
+                return intersect_circle_line(this.pos, this.rad, other.pos_a, other.pos_b, true);
         
             default:
                 return false;
@@ -160,26 +160,50 @@ class Circle extends Thing{
     }
 
     collide(other){
-        if(this.intersects(other)){
+        let intersection = this.intersects(other);
+        if(intersection){
             switch(other.type){
                 case Thingtype.CIRCLE:
+                    let pre_pos_diff = this.pos.copy().sub(other.pos);
+
+                    //add random noise if objects spawn exactly on each other
+                    while(pre_pos_diff.magSq() < 1e-6){
+                        let new_shift_pos = other.pos.copy().add(p5.Vector.random2D().setMag(1e-3));
+                        other.setPos([new_shift_pos.x, new_shift_pos.y]);
+                        pre_pos_diff = this.pos.copy().sub(other.pos);
+                        console.log("shifting");
+                    }
+
+                    let collision_point = other.pos.copy().add(pre_pos_diff.copy().mult(other.rad / (this.rad + other.rad)));
+                    
+                    //shift objects to new positions based on average point and size ratios (smaller one gets shifted more)
+                    let this_new_pos = collision_point.copy().add(this.pos.copy().sub(collision_point).setMag(this.rad));
+                    let other_new_pos = collision_point.copy().add(other.pos.copy().sub(collision_point).setMag(other.rad));
+
+                    this.setPos([this_new_pos.x, this_new_pos.y]);
+                    other.setPos([other_new_pos.x, other_new_pos.y]);
+                    
+                    //momentum and velocity calculations
                     let total_mass = this.mass + other.mass;
-                    let vel_diff = this.vel.copy().sub(other.vel);
+
                     let pos_diff = this.pos.copy().sub(other.pos);
+                    let vel_diff = this.vel.copy().sub(other.vel);
 
                     let o_vel_diff = other.vel.copy().sub(this.vel);
                     let o_pos_diff = other.pos.copy().sub(this.pos);
                     
                     let this_new_vel = this.vel.copy().sub(pos_diff.copy().mult(2 * other.mass * vel_diff.copy().dot(pos_diff) / (pos_diff.magSq() * total_mass)));
 
-                    let other_new_vel = other.vel.copy().sub(o_pos_diff.copy().mult(2 * other.mass * o_vel_diff.copy().dot(o_pos_diff) / (o_pos_diff.magSq() * total_mass)))
+                    let other_new_vel = other.vel.copy().sub(o_pos_diff.copy().mult(2 * this.mass * o_vel_diff.copy().dot(o_pos_diff) / (o_pos_diff.magSq() * total_mass)))
 
                     this.setVel([this_new_vel.x, this_new_vel.y]);
                     other.setVel([other_new_vel.x, other_new_vel.y]);
-
                     return;
     
                 case Thingtype.LINE:
+                    let new_pos = intersection.copy().add(this.pos.copy().sub(intersection).setMag(this.rad));
+                    this.setPos([new_pos.x, new_pos.y]);
+
                     let line_dir = other.pos_b.copy().sub(other.pos_a);
                     let normal = createVector(-line_dir.y, line_dir.x).normalize();
                     let new_vel = this.vel.copy().sub(normal.mult(2 * this.vel.copy().dot(normal)));

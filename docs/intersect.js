@@ -4,8 +4,12 @@ function intersect_point_point(p1_pos, p2_pos){
     return p1_pos.equals(p2_pos);
 }
 
-function intersect_point_circle(p_pos, c_pos, c_rad){
-    return p_pos.dist(c_pos) <= c_rad;
+function intersect_point_circle(p_pos, c_pos, c_rad, inclusive = true){
+    if(inclusive){
+        return p_pos.dist(c_pos) <= c_rad;
+    }else{
+        return p_pos.dist(c_pos) < c_rad;
+    }
 }
 
 function intersect_point_rect(p_pos, r_pos, r_w, r_h, inclusive = true){
@@ -71,8 +75,15 @@ function is_between(a, x, b){
     return (a <= x && x <= b) || (b <= x && x <= a);
 }
 
-function intersect_circle_line(c_pos, c_rad, l_posa, l_posb){
-    if(intersect_point_circle(l_posa, c_pos, c_rad) || intersect_point_circle(l_posb, c_pos, c_rad)){
+function intersect_circle_line(c_pos, c_rad, l_posa, l_posb, return_point = false){
+    if(intersect_point_circle(l_posa, c_pos, c_rad, false) && intersect_point_circle(l_posb, c_pos, c_rad, false)){
+        if(return_point){
+            if(c_pos.copy().sub(l_posa).magSq() > c_pos.copy().sub(l_posb).magSq()){
+                return l_posb;
+            }else{
+                return l_posa;
+            }
+        }
         return true;
     }
 
@@ -84,7 +95,14 @@ function intersect_circle_line(c_pos, c_rad, l_posa, l_posb){
     let within = l_posa.x != l_posb.x ? is_between(l_posa.x, closest.x, l_posb.x) : is_between(l_posa.y, closest.y, l_posb.y);
 
     if(within){
-        return intersect_point_circle(closest, c_pos, c_rad);
+        if(intersect_point_circle(closest, c_pos, c_rad)){
+            if(return_point){
+                return closest;
+            }
+            return true;
+        }else{
+            return false;
+        }
     }else{
         return false;
     }
