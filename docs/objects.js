@@ -20,6 +20,8 @@ class Thing{
         this.thingType = thingType;
         this.collisionType = collisionType;
         this.bbox = [0, 0];
+        this.highlighted = false;
+        this.locked = false;
     }
 
     draw(){}
@@ -38,14 +40,26 @@ class Thing{
         }
     }
 
-    move(friction = 1){
+    move(friction = 0.999){
+        if(this.locked) return;
+
         this.vel.add(this.acc);
         this.pos.add(this.vel);
 
-        this.vel.mult(friction);
-        this.acc.mult(friction);
+        if(this.collisionType !== CollisionType.STATIC){
+            this.vel.mult(friction);
+            this.acc.mult(friction);
+        }
         if(this.vel.magSq() < 1e-4) this.vel.setMag(0);
         if(this.acc.magSq() < 1e-4) this.acc.setMag(0);
+    }
+
+    lock(){
+        this.locked = true;
+    }
+
+    unlock(){
+        this.locked = false;
     }
 
     setPos(newpos){
@@ -58,6 +72,18 @@ class Thing{
 
     intersects(){
         return false;
+    }
+
+    mouse_within(){
+        return false;
+    }
+
+    highlight(){
+        this.highlighted = true;
+    }
+
+    unhighlight(){
+        this.highlighted = false;
     }
 }
 
@@ -92,6 +118,10 @@ class Point extends Thing{
             default:
                 return false;
         }
+    }
+
+    mouse_within(){
+        return intersect_point_point(this.pos, createVector(mouseX, mouseY));
     }
 }
 
@@ -133,6 +163,10 @@ class Line extends Thing{
                 return false;
         }
     }
+
+    mouse_within(){
+        return intersect_point_line(createVector(mouseX, mouseY), this.posA, this.posB);
+    }
 }
 
 class Circle extends Thing{
@@ -145,12 +179,12 @@ class Circle extends Thing{
         this.bbox = [rad*2, rad*2]
     }
 
-    draw(f = 0, s = 255, sw = 1){
-        this.fill_stroke(f, s, sw);
+    draw(f = -1, s = 255, sw = 1){
+        this.collisionType === CollisionType.STATIC ? this.fill_stroke(max(f, 100), s, sw) : this.fill_stroke(f, s, sw);
         let p = this.pos;
         ellipse(p.x, p.y, this.rad*2, this.rad*2);
-        let l = p.copy().add(this.vel.copy().setMag(this.rad));
-        line(p.x, p.y, l.x, l.y);
+        // let l = p.copy().add(this.vel.copy().setMag(this.rad));
+        // line(p.x, p.y, l.x, l.y);
         // point(p.x, p.y);
     }
 
@@ -171,6 +205,10 @@ class Circle extends Thing{
             default:
                 return false;
         }
+    }
+
+    mouse_within(){
+        return intersect_point_circle(createVector(mouseX, mouseY), this.pos, this.rad);
     }
 }
 
@@ -209,6 +247,10 @@ class Rect extends Thing{
             default:
                 return false;
         }
+    }
+
+    mouse_within(){
+        return intersect_point_rect(createVector(mouseX, mouseY), this.pos, this.w, this.h);
     }
 }
 

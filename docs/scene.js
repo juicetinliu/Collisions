@@ -8,30 +8,37 @@ class Scene{
         this.collisionPairs = [];
         this.collisionGraph = new QuadTree(this.x, this.y, this.w, this.h);
         this.collider = new ThingCollider();
+
+        this.mouseClick = 0;
+
+        this.selectedThing = null;
+        this.selectionVelocity = createVector(0, 0);
     }
 
     render(){
-        this.things.forEach(thing => thing.draw());
         // this.collisionGraph.draw();
+        this.things.forEach(thing => thing.highlighted ? thing.draw(128) : thing.draw());
         this.run();
     }
 
     add_thing(thing){
         this.things.push(thing);
-    }
-
-    remove_thing(){
+        return thing;
     }
 
     run(){
+        this.mouse_interaction();
+
         this.collisionGraph.reset();
         this.collisionPairs = [];
         this.things.forEach(thing => {
             this.collisionGraph.insert(thing);
         });
         checked_collisions = 0;
+
+        //identify colliding pairs
         this.things.forEach(thing => {
-            let search_radius = thing.bbox[0] + 1 + thing.vel.mag()*2
+            let search_radius = thing.bbox[0] - 1e-4 + thing.vel.mag()*2
             let nearby = this.collisionGraph.search_circle(thing.pos, search_radius);
             // let nearby = this.collisionGraph.search_rect(thing.pos, max(thing.bbox) + thing.vel.mag()*2, max(thing.bbox) + thing.vel.mag()*2);
             nearby.forEach(othing => {
@@ -49,12 +56,71 @@ class Scene{
             });
         });
         colliding_pairs = this.collisionPairs.length;
+
+        //resolve colliding pairs
         this.collisionPairs.forEach(pair => {
             this.collider.collide(pair.a, pair.b, pair.intersection); 
         })
+        
         this.things.forEach(thing => {
             thing.move();
         });
+
+        for(let t = this.things.length - 1; t >= 0; t--){
+            let thing = this.things[t];
+            if(!intersect_circle_rect(thing.pos, thing.rad, createVector(this.x, this.y), this.w, this.h)){
+                this.things.splice(t, 1);
+            }
+        }
+    }
+
+    mouse_interaction(){
+        if(this.mouseClick === 0){ //not clicked
+            this.selectedThing = null;
+            this.things.forEach(thing => {
+                thing.unhighlight();
+                if(thing.mouse_within()){
+                    this.selectedThing = thing;
+                }
+            });
+            if(this.selectedThing){
+                this.selectedThing.highlight();
+            }
+
+            if(mouseIsPressed){
+                this.mouseClick = 1;
+            }
+        }else if(this.mouseClick === 1){ //rising edge
+            if(!this.selectedThing){
+                this.selectedThing = scene.add_thing(new Circle([mouseX,mouseY], [0, 0], 0, 15, CollisionType.DYNAMIC));
+                this.selectedThing.highlight();
+            }
+            this.selectedThing.lock();
+            this.selectedThing.setVel([0,0]);
+
+            this.mouseClick = 2;
+        }else if(this.mouseClick === 2){ //clicked
+            stroke(0, 255, 255);
+            line(this.selectedThing.pos.x, this.selectedThing.pos.y, mouseX, mouseY);
+            this.selectionVelocity.set(this.selectedThing.pos.copy().sub(mouseX, mouseY)).mult(0.1);
+
+            if(this.selectionVelocity.mag() <= 0.5){
+                this.selectionVelocity.set(0, 0);
+            }
+
+            if(!mouseIsPressed){
+                this.mouseClick = 3;
+            }
+        }else{ //falling edge
+            this.selectedThing.unhighlight();
+            this.selectedThing.unlock();
+            this.selectedThing.setVel([this.selectionVelocity.x, this.selectionVelocity.y]);
+
+            this.selectedThing = null;
+            this.selectionVelocity.set(0,0);
+
+            this.mouseClick = 0;
+        }
     }
 }
 

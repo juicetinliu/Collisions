@@ -41,8 +41,8 @@ class ThingCollider{
     }
 
     circle_circle(a, b){
-        stroke(255,0,0);
-        line(a.pos.x, a.pos.y, b.pos.x, b.pos.y);
+        // stroke(255,0,0);
+        // line(a.pos.x, a.pos.y, b.pos.x, b.pos.y);
         // STATICS
         let a_static = (a.collisionType === CollisionType.STATIC);
         let b_static = (b.collisionType === CollisionType.STATIC);
@@ -101,8 +101,12 @@ class ThingCollider{
         let a_new_vel = tangent.copy().mult(a.vel.dot(tangent)).add(normal.copy().mult(a_momentum));
         let b_new_vel = tangent.copy().mult(b.vel.dot(tangent)).add(normal.copy().mult(b_momentum));
 
-        a.setVel([a_new_vel.x, a_new_vel.y]);
-        b.setVel([b_new_vel.x, b_new_vel.y]);
+        if(!a_static){
+            a.setVel([a_new_vel.x, a_new_vel.y]);
+        }
+        if(!b_static){
+            b.setVel([b_new_vel.x, b_new_vel.y]);
+        }
     }
 
     circle_line(a, b, intersection){

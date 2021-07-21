@@ -21,7 +21,8 @@ function intersect_point_rect(p_pos, r_pos, r_w, r_h, inclusive = true){
 }
 
 function intersect_circle_circle(c1_pos, c1_rad, c2_pos, c2_rad){
-    return c1_pos.dist(c2_pos) <= c1_rad + c2_rad;
+    let rad_sum =  c1_rad + c2_rad;
+    return c1_pos.copy().sub(c2_pos).magSq() <= rad_sum * rad_sum;
 }
 
 function intersect_circle_rect(c_pos, c_rad, r_pos, r_w, r_h){
@@ -44,7 +45,7 @@ function intersect_circle_rect(c_pos, c_rad, r_pos, r_w, r_h){
     }
 
     let temp = createVector(temp_X, temp_Y);
-    return temp.dist(c_pos) <= c_rad;
+    return intersect_point_circle(temp, c_pos, c_rad);
 }
 
 function intersect_rect_rect(r1_pos, r1_w, r1_h, r2_pos, r2_w, r2_h){
