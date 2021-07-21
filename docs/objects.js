@@ -5,12 +5,20 @@ const types_of_things = {
     RECT: "rect",
 }
 
-let Thingtype = types_of_things;
+const collision_properties = {
+    NONE: "won't collide at all",
+    STATIC: "won't react to collisions like a wall",
+    DYNAMIC: "will react to collisions like a ball",
+}
+
+let ThingType = types_of_things;
+let CollisionType = collision_properties;
 
 class Thing{
-    constructor(mass = 0, type = null){
+    constructor(mass = 0, thingType = null, collisionType = CollisionType.NONE){
         this.mass = mass;
-        this.type = type;
+        this.thingType = thingType;
+        this.collisionType = collisionType;
     }
 
     draw(){}
@@ -50,8 +58,8 @@ class Thing{
 }
 
 class Point extends Thing{
-    constructor(pos = [0, 0], vel = [0, 0], acc = [0, 0], mass = 0){
-        super(mass, Thingtype.POINT);
+    constructor(pos = [0, 0], vel = [0, 0], acc = [0, 0], mass = 0, collisionType = CollisionType.STATIC){
+        super(mass, ThingType.POINT, collisionType);
         this.pos = to_2d_vector(pos);
         this.vel = to_2d_vector(vel);
         this.acc = to_2d_vector(acc);
@@ -64,17 +72,17 @@ class Point extends Thing{
     }
 
     intersects(other){
-        switch (other.type) {
-            case Thingtype.POINT:
+        switch (other.thingType) {
+            case ThingType.POINT:
                 return intersect_point_point(this.pos, other.pos);
             
-            case Thingtype.CIRCLE:
+            case ThingType.CIRCLE:
                 return intersect_point_circle(this.pos, other.pos, other.rad);
             
-            case Thingtype.RECT:
+            case ThingType.RECT:
                 return intersect_point_rect(this.pos, other.pos, other.w, other.h);
 
-            case Thingtype.LINE:
+            case ThingType.LINE:
                 return intersect_point_line(this.pos, other.pos_a, other.pos_b);
         
             default:
@@ -84,8 +92,8 @@ class Point extends Thing{
 }
 
 class Line extends Thing{
-    constructor(pos_a = [0, 0], pos_b = [10, 0], vel, acc, mass = 0){
-        super(mass, Thingtype.LINE);
+    constructor(pos_a = [0, 0], pos_b = [10, 10], vel, acc, mass = 0, collisionType = CollisionType.STATIC){
+        super(mass, ThingType.LINE, collisionType);
         this.pos_a = to_2d_vector(pos_a);
         this.pos_b = to_2d_vector(pos_b);
     }
@@ -104,17 +112,17 @@ class Line extends Thing{
     }
 
     intersects(other){
-        switch(other.type) {
-            case Thingtype.POINT:
+        switch(other.thingType) {
+            case ThingType.POINT:
                 return intersect_point_line(other.pos, this.pos_a, this.pos_b);
             
-            case Thingtype.CIRCLE:
+            case ThingType.CIRCLE:
                 return intersect_circle_line(other.pos, other.rad, this.pos_a, this.pos_b);
             
-            case Thingtype.RECT:
+            case ThingType.RECT:
                 return intersect_rect_line(other.pos, other.w, other.h, this.pos_a, this.pos_b);
 
-            case Thingtype.LINE:
+            case ThingType.LINE:
                 return intersect_line_line(this.pos_a, this.pos_b, other.pos_a, other.pos_b);
         
             default:
@@ -126,8 +134,8 @@ class Line extends Thing{
 }
 
 class Circle extends Thing{
-    constructor(pos = [0, 0], vel = [0, 0], acc = [0, 0], rad, mass = rad){
-        super(mass, Thingtype.CIRCLE);
+    constructor(pos = [0, 0], vel = [0, 0], acc = [0, 0], rad, collisionType = CollisionType.STATIC, mass = rad){
+        super(mass, ThingType.CIRCLE, collisionType);
         this.pos = to_2d_vector(pos);
         this.vel = to_2d_vector(vel);
         this.acc = to_2d_vector(acc);
@@ -141,86 +149,28 @@ class Circle extends Thing{
     }
 
     intersects(other){
-        switch(other.type){
-            case Thingtype.POINT:
+        switch(other.thingType){
+            case ThingType.POINT:
                 return intersect_point_circle(other.pos, this.pos, this.rad);
             
-            case Thingtype.CIRCLE:
+            case ThingType.CIRCLE:
                 return intersect_circle_circle(this.pos, this.rad, other.pos, other.rad);
             
-            case Thingtype.RECT:
+            case ThingType.RECT:
                 return intersect_circle_rect(this.pos, this.rad, other.pos, other.w, other.h);
 
-            case Thingtype.LINE:
+            case ThingType.LINE:
                 return intersect_circle_line(this.pos, this.rad, other.pos_a, other.pos_b, true);
         
             default:
                 return false;
         }
     }
-
-    collide(other){
-        let intersection = this.intersects(other);
-        if(intersection){
-            switch(other.type){
-                case Thingtype.CIRCLE:
-                    let pre_pos_diff = this.pos.copy().sub(other.pos);
-
-                    //add random noise if objects spawn exactly on each other
-                    while(pre_pos_diff.magSq() < 1e-6){
-                        let new_shift_pos = other.pos.copy().add(p5.Vector.random2D().setMag(1e-3));
-                        other.setPos([new_shift_pos.x, new_shift_pos.y]);
-                        pre_pos_diff = this.pos.copy().sub(other.pos);
-                        console.log("shifting");
-                    }
-
-                    let collision_point = other.pos.copy().add(pre_pos_diff.copy().mult(other.rad / (this.rad + other.rad)));
-                    
-                    //shift objects to new positions based on average point and size ratios (smaller one gets shifted more)
-                    let this_new_pos = collision_point.copy().add(this.pos.copy().sub(collision_point).setMag(this.rad));
-                    let other_new_pos = collision_point.copy().add(other.pos.copy().sub(collision_point).setMag(other.rad));
-
-                    this.setPos([this_new_pos.x, this_new_pos.y]);
-                    other.setPos([other_new_pos.x, other_new_pos.y]);
-                    
-                    //momentum and velocity calculations
-                    let total_mass = this.mass + other.mass;
-
-                    let pos_diff = this.pos.copy().sub(other.pos);
-                    let vel_diff = this.vel.copy().sub(other.vel);
-
-                    let o_vel_diff = other.vel.copy().sub(this.vel);
-                    let o_pos_diff = other.pos.copy().sub(this.pos);
-                    
-                    let this_new_vel = this.vel.copy().sub(pos_diff.copy().mult(2 * other.mass * vel_diff.copy().dot(pos_diff) / (pos_diff.magSq() * total_mass)));
-
-                    let other_new_vel = other.vel.copy().sub(o_pos_diff.copy().mult(2 * this.mass * o_vel_diff.copy().dot(o_pos_diff) / (o_pos_diff.magSq() * total_mass)))
-
-                    this.setVel([this_new_vel.x, this_new_vel.y]);
-                    other.setVel([other_new_vel.x, other_new_vel.y]);
-                    return;
-    
-                case Thingtype.LINE:
-                    let new_pos = intersection.copy().add(this.pos.copy().sub(intersection).setMag(this.rad));
-                    this.setPos([new_pos.x, new_pos.y]);
-
-                    let line_dir = other.pos_b.copy().sub(other.pos_a);
-                    let normal = createVector(-line_dir.y, line_dir.x).normalize();
-                    let new_vel = this.vel.copy().sub(normal.mult(2 * this.vel.copy().dot(normal)));
-
-                    this.setVel([new_vel.x, new_vel.y]);
-                    return;
-            
-                default:
-                    return;
-            }
-        }
-    }
 }
 
 class Rect extends Thing{
-    constructor(pos = [0, 0], vel = [0, 0], acc = [0, 0], dims, mass = 0){
-        super(mass, Thingtype.RECT);
+    constructor(pos = [0, 0], vel = [0, 0], acc = [0, 0], dims, mass = 0, collisionType = CollisionType.STATIC){
+        super(mass, ThingType.RECT, collisionType);
         this.pos = to_2d_vector(pos);
         this.vel = to_2d_vector(vel);
         this.acc = to_2d_vector(acc);
@@ -236,17 +186,17 @@ class Rect extends Thing{
     }
 
     intersects(other){
-        switch(other.type) {
-            case Thingtype.POINT:
+        switch(other.thingType) {
+            case ThingType.POINT:
                 return intersect_point_rect(other.pos, this.pos, this.w, this.h);
             
-            case Thingtype.CIRCLE:
+            case ThingType.CIRCLE:
                 return intersect_circle_rect(other.pos, other.rad, this.pos, this.w, this.h);
             
-            case Thingtype.RECT:
+            case ThingType.RECT:
                 return intersect_rect_rect(this.pos, this.w, this.h, other.pos, other.w, other.h);
 
-            case Thingtype.LINE:
+            case ThingType.LINE:
                 return intersect_rect_line(this.pos, this.w, this.h, other.pos_a, other.pos_b);
         
             default:
@@ -257,7 +207,7 @@ class Rect extends Thing{
 
 function to_2d_vector(inp){
     if(!Array.isArray(inp)){
-        if(typeof inp == 'number'){
+        if(typeof inp === 'number'){
             return createVector(inp, inp);
         }
     }else{

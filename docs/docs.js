@@ -4,6 +4,8 @@ let things = []
 let balls = [];
 let arena = [];
 
+let collider = new ThingCollider();
+
 function setup() {
     renderer = createCanvas(windowWidth, windowHeight);
     balls_setup();
@@ -25,6 +27,7 @@ function setup() {
 
     // balls.push(new Circle([300,340], [0,1], 0, 10));
     // balls.push(new Circle([300,400], [0,1], 0, 50));
+    mymouse = new Circle([windowWidth/2, windowHeight/2], 0, 0, 30, CollisionType.STATIC);
     smooth();
 }
 
@@ -34,27 +37,30 @@ function draw() {
     fill(255);
     text(frameRate().toFixed(1), 20, 20);
     
+    mymouse.setPos([mouseX, mouseY]);
     arena.forEach(a => a.draw());
     let x = 50
     balls.forEach(ball => {
         ball.draw(x, 255);
         x += 200/balls.length;
         ball.move();
-        arena.forEach(a => ball.collide(a));
+        arena.forEach(wall => collider.collide(ball, wall));
+        collider.collide(ball, mymouse);
     });
     if(balls.length >= 2){
         for(let i = 0; i < balls.length - 1; i++){
             for(let j = i + 1; j < balls.length; j++){
-                balls[i].collide(balls[j]);
+                collider.collide(balls[i], balls[j]);
             }
         }
     }
+    mymouse.draw();
     // balls_draw();
     // test_draw();
 }
 
 function mousePressed(){
-    balls.push(new Circle([mouseX,mouseY], [0, 10], 0, 50));
+    balls.push(new Circle([mouseX,mouseY], [0, 10], 0, 50, CollisionType.DYNAMIC));
 }
 
 function balls_setup(){
@@ -68,7 +74,7 @@ function balls_setup(){
     let r_vel
     for(let i = 0; i < 100; i++){
         r_vel = p5.Vector.random2D().setMag(1);
-        balls.push(new Circle([300, 300], [0, 0], 0, 10));
+        balls.push(new Circle([300, 300], [0, 0], 0, 10, CollisionType.DYNAMIC));
     }
 }
 

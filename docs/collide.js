@@ -1,0 +1,114 @@
+class ThingCollider{
+    constructor(){}
+
+    collide(a, b){
+        let intersection = a.intersects(b);
+
+        if(intersection){
+            switch(a.thingType){
+
+                case ThingType.CIRCLE:
+                    switch(b.thingType){
+
+                        case ThingType.CIRCLE:
+                            this.circle_circle(a, b);
+                            return;
+            
+                        case ThingType.LINE:
+                            this.circle_line(a, b, intersection);
+                            return;
+                    
+                        default:
+                            return;
+                    }
+
+                case ThingType.LINE:
+                    switch(b.thingType){
+            
+                        case ThingType.CIRCLE:
+                            this.circle_line(b, a, intersection);
+                            return;
+                    
+                        default:
+                            return;
+                    }
+
+                default:
+                    return;
+            }
+        }
+    }
+
+    circle_circle(a, b){
+        stroke(255,0,0);
+        line(a.pos.x, a.pos.y, b.pos.x, b.pos.y);
+        // static collision
+        let a_static = (a.collisionType === CollisionType.STATIC);
+        let b_static = (b.collisionType === CollisionType.STATIC);
+        
+        if(a_static && b_static) return; //both static
+        let pre_pos_diff = a.pos.copy().sub(b.pos);
+
+        if(!(a_static || b_static)){ //neither are static
+            if(pre_pos_diff.magSq() < 1e-6){ //add random noise if objects spawn exactly on each other
+                let new_shift_pos = b.pos.copy().add(p5.Vector.random2D().setMag(1e-3));
+                b.setPos([new_shift_pos.x, new_shift_pos.y]);
+                console.log("shifting");
+            }
+        }else if(a_static){
+            if(pre_pos_diff.magSq() < 1e-6){
+                let new_shift_pos = b.pos.copy().add(p5.Vector.random2D().setMag(1e-3));
+                b.setPos([new_shift_pos.x, new_shift_pos.y]);
+                console.log("shifting");
+            }
+        }else if(b_static){
+            if(pre_pos_diff.magSq() < 1e-6){
+                let new_shift_pos = a.pos.copy().add(p5.Vector.random2D().setMag(1e-3));
+                a.setPos([new_shift_pos.x, new_shift_pos.y]);
+                console.log("shifting");
+            }
+        }
+        pre_pos_diff = a.pos.copy().sub(b.pos);
+        let overlap = pre_pos_diff.setMag(pre_pos_diff.mag() - a.rad - b.rad);
+        
+        if(!(a_static || b_static)){
+            overlap = overlap.mult(0.5);
+        }
+
+        if(!a_static){
+            let a_new_pos = a.pos.copy().sub(overlap);
+            a.setPos([a_new_pos.x, a_new_pos.y]);
+        }
+        if(!b_static){
+            let b_new_pos = b.pos.copy().add(overlap);
+            b.setPos([b_new_pos.x, b_new_pos.y]);            
+        }
+
+        //momentum and velocity calculations
+        let total_mass = a.mass + b.mass;
+
+        let pos_diff = a.pos.copy().sub(b.pos);
+        let vel_diff = a.vel.copy().sub(b.vel);
+
+        let o_vel_diff = b.vel.copy().sub(a.vel);
+        let o_pos_diff = b.pos.copy().sub(a.pos);
+        
+        let a_new_vel = a.vel.copy().sub(pos_diff.copy().mult(2 * b.mass * vel_diff.copy().dot(pos_diff) / (pos_diff.magSq() * total_mass)));
+
+        let b_new_vel = b.vel.copy().sub(o_pos_diff.copy().mult(2 * a.mass * o_vel_diff.copy().dot(o_pos_diff) / (o_pos_diff.magSq() * total_mass)))
+
+        a.setVel([a_new_vel.x, a_new_vel.y]);
+        b.setVel([b_new_vel.x, b_new_vel.y]);
+    }
+
+    circle_line(a, b, intersection){
+        let new_pos = intersection.copy().add(a.pos.copy().sub(intersection).setMag(a.rad));
+        a.setPos([new_pos.x, new_pos.y]);
+
+        let line_dir = b.pos_b.copy().sub(b.pos_a);
+        let normal = createVector(-line_dir.y, line_dir.x).normalize();
+        let new_vel = a.vel.copy().sub(normal.mult(2 * a.vel.copy().dot(normal)));
+
+        a.setVel([new_vel.x, new_vel.y]);
+    }
+}
