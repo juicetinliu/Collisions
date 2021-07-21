@@ -40,9 +40,9 @@ class ThingCollider{
     }
 
     circle_circle(a, b){
-        stroke(255,0,0);
-        line(a.pos.x, a.pos.y, b.pos.x, b.pos.y);
-        // static collision
+        // stroke(255,0,0);
+        // line(a.pos.x, a.pos.y, b.pos.x, b.pos.y);
+        // STATICS
         let a_static = (a.collisionType === CollisionType.STATIC);
         let b_static = (b.collisionType === CollisionType.STATIC);
         
@@ -85,17 +85,20 @@ class ThingCollider{
         }
 
         //momentum and velocity calculations
-        let total_mass = a.mass + b.mass;
+        let mass_total = a.mass + b.mass;
+        let mass_diff = a.mass - b.mass;
 
-        let pos_diff = a.pos.copy().sub(b.pos);
-        let vel_diff = a.vel.copy().sub(b.vel);
-
-        let o_vel_diff = b.vel.copy().sub(a.vel);
-        let o_pos_diff = b.pos.copy().sub(a.pos);
+        let normal = b.pos.copy().sub(a.pos).normalize();
+        let tangent = createVector(-normal.y, normal.x);
         
-        let a_new_vel = a.vel.copy().sub(pos_diff.copy().mult(2 * b.mass * vel_diff.copy().dot(pos_diff) / (pos_diff.magSq() * total_mass)));
+        let a_dot_normal = a.vel.copy().dot(normal);
+        let b_dot_normal = b.vel.copy().dot(normal);
 
-        let b_new_vel = b.vel.copy().sub(o_pos_diff.copy().mult(2 * a.mass * o_vel_diff.copy().dot(o_pos_diff) / (o_pos_diff.magSq() * total_mass)))
+        let a_momentum = (a_dot_normal * mass_diff + 2 * b.mass * b_dot_normal) / (mass_total);
+        let b_momentum = (b_dot_normal * -mass_diff + 2 * a.mass * a_dot_normal) / (mass_total);
+        
+        let a_new_vel = tangent.copy().mult(a.vel.copy().dot(tangent)).add(normal.copy().mult(a_momentum));
+        let b_new_vel = tangent.copy().mult(b.vel.copy().dot(tangent)).add(normal.copy().mult(b_momentum));
 
         a.setVel([a_new_vel.x, a_new_vel.y]);
         b.setVel([b_new_vel.x, b_new_vel.y]);
@@ -105,7 +108,7 @@ class ThingCollider{
         let new_pos = intersection.copy().add(a.pos.copy().sub(intersection).setMag(a.rad));
         a.setPos([new_pos.x, new_pos.y]);
 
-        let line_dir = b.pos_b.copy().sub(b.pos_a);
+        let line_dir = b.posB.copy().sub(b.posA);
         let normal = createVector(-line_dir.y, line_dir.x).normalize();
         let new_vel = a.vel.copy().sub(normal.mult(2 * a.vel.copy().dot(normal)));
 

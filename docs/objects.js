@@ -38,11 +38,12 @@ class Thing{
     }
 
     move(){
+        if(this.vel.magSq() < 1e-6) this.vel.setMag(0);
+        if(this.acc.magSq() < 1e-6) this.acc.setMag(0);
+
         this.vel.add(this.acc);
         this.pos.add(this.vel);
     }
-
-    collide(){}
 
     setPos(newpos){
         this.pos.set(...newpos);
@@ -83,7 +84,7 @@ class Point extends Thing{
                 return intersect_point_rect(this.pos, other.pos, other.w, other.h);
 
             case ThingType.LINE:
-                return intersect_point_line(this.pos, other.pos_a, other.pos_b);
+                return intersect_point_line(this.pos, other.posA, other.posB);
         
             default:
                 return false;
@@ -92,45 +93,43 @@ class Point extends Thing{
 }
 
 class Line extends Thing{
-    constructor(pos_a = [0, 0], pos_b = [10, 10], vel, acc, mass = 0, collisionType = CollisionType.STATIC){
+    constructor(posA = [0, 0], posB = [10, 10], vel, acc, mass = 0, collisionType = CollisionType.STATIC){
         super(mass, ThingType.LINE, collisionType);
-        this.pos_a = to_2d_vector(pos_a);
-        this.pos_b = to_2d_vector(pos_b);
+        this.posA = to_2d_vector(posA);
+        this.posB = to_2d_vector(posB);
     }
 
     move(){}
 
     draw(s = 255, sw = 1){
         this.fillstroke(-1, s, sw);
-        let p_a = this.pos_a;
-        let p_b = this.pos_b;
+        let p_a = this.posA;
+        let p_b = this.posB;
         line(p_a.x, p_a.y, p_b.x, p_b.y);
     }
 
     setPos(newpos){
-        this.pos_b.set(...newpos);
+        this.posB.set(...newpos);
     }
 
     intersects(other){
         switch(other.thingType) {
             case ThingType.POINT:
-                return intersect_point_line(other.pos, this.pos_a, this.pos_b);
+                return intersect_point_line(other.pos, this.posA, this.posB);
             
             case ThingType.CIRCLE:
-                return intersect_circle_line(other.pos, other.rad, this.pos_a, this.pos_b);
+                return intersect_circle_line(other.pos, other.rad, this.posA, this.posB);
             
             case ThingType.RECT:
-                return intersect_rect_line(other.pos, other.w, other.h, this.pos_a, this.pos_b);
+                return intersect_rect_line(other.pos, other.w, other.h, this.posA, this.posB);
 
             case ThingType.LINE:
-                return intersect_line_line(this.pos_a, this.pos_b, other.pos_a, other.pos_b);
+                return intersect_line_line(this.posA, this.posB, other.posA, other.posB);
         
             default:
                 return false;
         }
     }
-
-    collide(){}
 }
 
 class Circle extends Thing{
@@ -146,6 +145,8 @@ class Circle extends Thing{
         this.fillstroke(f, s, sw);
         let p = this.pos;
         ellipse(p.x, p.y, this.rad*2, this.rad*2);
+        let l = p.copy().add(this.vel.copy().setMag(this.rad));
+        line(p.x, p.y, l.x, l.y);
     }
 
     intersects(other){
@@ -160,7 +161,7 @@ class Circle extends Thing{
                 return intersect_circle_rect(this.pos, this.rad, other.pos, other.w, other.h);
 
             case ThingType.LINE:
-                return intersect_circle_line(this.pos, this.rad, other.pos_a, other.pos_b, true);
+                return intersect_circle_line(this.pos, this.rad, other.posA, other.posB, true);
         
             default:
                 return false;
@@ -197,7 +198,7 @@ class Rect extends Thing{
                 return intersect_rect_rect(this.pos, this.w, this.h, other.pos, other.w, other.h);
 
             case ThingType.LINE:
-                return intersect_rect_line(this.pos, this.w, this.h, other.pos_a, other.pos_b);
+                return intersect_rect_line(this.pos, this.w, this.h, other.posA, other.posB);
         
             default:
                 return false;
