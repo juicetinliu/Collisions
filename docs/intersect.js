@@ -6,9 +6,9 @@ function intersect_point_point(p1_pos, p2_pos){
 
 function intersect_point_circle(p_pos, c_pos, c_rad, inclusive = true){
     if(inclusive){
-        return p_pos.dist(c_pos) <= c_rad;
+        return p_pos.copy().sub(c_pos).magSq() <= c_rad * c_rad;
     }else{
-        return p_pos.dist(c_pos) < c_rad;
+        return p_pos.copy().sub(c_pos).magSq() < c_rad * c_rad;
     }
 }
 

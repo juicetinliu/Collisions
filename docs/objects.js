@@ -19,6 +19,7 @@ class Thing{
         this.mass = mass;
         this.thingType = thingType;
         this.collisionType = collisionType;
+        this.bbox = [0, 0];
     }
 
     draw(){}
@@ -141,6 +142,7 @@ class Circle extends Thing{
         this.vel = to_2d_vector(vel);
         this.acc = to_2d_vector(acc);
         this.rad = rad;
+        this.bbox = [rad*2, rad*2]
     }
 
     draw(f = -1, s = 255, sw = 1){
@@ -179,6 +181,7 @@ class Rect extends Thing{
         this.acc = to_2d_vector(acc);
         this.w = dims[0];
         this.h = dims[1];
+        this.bbox = [this.w, this.h];
     }
 
     draw(f = -1, s = 255, sw = 1){

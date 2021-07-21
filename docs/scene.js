@@ -7,18 +7,16 @@ class Scene{
         this.things = [];
         this.collisionGraph = new QuadTree(this.x, this.y, this.w, this.h);
         this.collider = new ThingCollider();
-
     }
 
     render(){
         this.things.forEach(thing => thing.draw());
-        this.collisionGraph.draw();
+        // this.collisionGraph.draw();
         this.run();
     }
 
     add_object(thing){
         this.things.push(thing);
-        
     }
 
     remove_object(){
@@ -30,23 +28,11 @@ class Scene{
             thing.move();
             this.collisionGraph.insert(thing);
         });
-
-        let found = this.collisionGraph.find_circle(createVector(mouseX, mouseY), 50);
-        console.log(found)
-        stroke(255);
-        noFill();
-        rectMode(CENTER);
-        ellipse(mouseX, mouseY, 50*2);
-        found.forEach(f => {f.draw(color(255,0,0))})
-
-        if(this.things.length >= 2){
-            for(let i = 0; i < this.things.length - 1; i++){
-                for(let j = i + 1; j < this.things.length; j++){
-                    this.collider.collide(this.things[i], this.things[j]);
-                }
-            }
-        }
-        // console.log("running")
+        this.things.forEach(thing => {
+            let nearby = this.collisionGraph.find_circle(thing.pos, thing.bbox[0] + thing.vel.mag()*2);
+            // let nearby = this.collisionGraph.find_rect(thing.pos, max(thing.bbox) + thing.vel.mag()*2, max(thing.bbox) + thing.vel.mag()*2);
+            nearby.forEach(othing => {if(thing !== othing) this.collider.collide(othing, thing)});
+        });
     }
 }
 
@@ -104,7 +90,7 @@ class QuadTree{
         }
     }
 
-    find_rect(pos, w, h){
+    find_rect(pos, w, h){ //search for things in a rectangle around a point pos
         let found_things = [];
 
         if(!intersect_rect_rect(this.pos, this.w, this.h, pos, w, h)) return found_things;
@@ -125,7 +111,7 @@ class QuadTree{
         return found_things;
     }
 
-    find_circle(pos, rad){
+    find_circle(pos, rad){ //search for things in a circle around a point pos
         let found_things = [];
 
         if(!intersect_circle_rect(pos, rad, this.pos, this.w, this.h)) return found_things;

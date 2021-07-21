@@ -42,8 +42,8 @@ class ThingCollider{
     }
 
     circle_circle(a, b){
-        stroke(255,0,0);
-        line(a.pos.x, a.pos.y, b.pos.x, b.pos.y);
+        // stroke(255,0,0);
+        // line(a.pos.x, a.pos.y, b.pos.x, b.pos.y);
         // STATICS
         let a_static = (a.collisionType === CollisionType.STATIC);
         let b_static = (b.collisionType === CollisionType.STATIC);
