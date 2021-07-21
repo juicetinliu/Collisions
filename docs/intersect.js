@@ -14,7 +14,7 @@ function intersect_point_circle(p_pos, c_pos, c_rad, inclusive = true){
 
 function intersect_point_rect(p_pos, r_pos, r_w, r_h, inclusive = true){
     if(inclusive){
-        return p_pos.x < r_pos.x + r_w/2 && p_pos.x > r_pos.x - r_w/2 && p_pos.y < r_pos.y + r_h/2 && p_pos.y > r_pos.y - r_h/2;
+        return p_pos.x <= r_pos.x + r_w/2 && p_pos.x >= r_pos.x - r_w/2 && p_pos.y <= r_pos.y + r_h/2 && p_pos.y >= r_pos.y - r_h/2;
     }else{
         return p_pos.x < r_pos.x + r_w/2 && p_pos.x > r_pos.x - r_w/2 && p_pos.y < r_pos.y + r_h/2 && p_pos.y > r_pos.y - r_h/2;
     }

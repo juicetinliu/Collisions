@@ -1,14 +1,14 @@
 const types_of_things = {
-    POINT: "point",
-    LINE: "line",
-    CIRCLE: "circle",
-    RECT: "rect",
+    POINT: "POINT",
+    LINE: "LINE",
+    CIRCLE: "CIRCLE",
+    RECT: "RECT",
 }
 
 const collision_properties = {
-    NONE: "won't collide at all",
-    STATIC: "won't react to collisions like a wall",
-    DYNAMIC: "will react to collisions like a ball",
+    NONE: "NONE", //won't collide at all
+    STATIC: "STATIC", //won't react to collisions like a wall
+    DYNAMIC: "DYNAMIC", //will react to collisions like a ball
 }
 
 let ThingType = types_of_things;
@@ -23,7 +23,7 @@ class Thing{
 
     draw(){}
 
-    fillstroke(f = 255, s = -1, sw = 1){
+    fill_stroke(f = -1, s = 255, sw = 1){
         if(s === -1){
             noStroke();
         }else{
@@ -37,12 +37,14 @@ class Thing{
         }
     }
 
-    move(){
-        if(this.vel.magSq() < 1e-6) this.vel.setMag(0);
-        if(this.acc.magSq() < 1e-6) this.acc.setMag(0);
-
+    move(friction = 1){
         this.vel.add(this.acc);
         this.pos.add(this.vel);
+
+        this.vel.mult(friction);
+        this.acc.mult(friction);
+        if(this.vel.magSq() < 1e-4) this.vel.setMag(0);
+        if(this.acc.magSq() < 1e-4) this.acc.setMag(0);
     }
 
     setPos(newpos){
@@ -67,7 +69,7 @@ class Point extends Thing{
     }
 
     draw(s = 255, sw = 1){
-        this.fillstroke(-1, s, sw);
+        this.fill_stroke(-1, s, sw);
         let p = this.pos;
         point(p.x, p.y);
     }
@@ -102,7 +104,7 @@ class Line extends Thing{
     move(){}
 
     draw(s = 255, sw = 1){
-        this.fillstroke(-1, s, sw);
+        this.fill_stroke(-1, s, sw);
         let p_a = this.posA;
         let p_b = this.posB;
         line(p_a.x, p_a.y, p_b.x, p_b.y);
@@ -141,8 +143,8 @@ class Circle extends Thing{
         this.rad = rad;
     }
 
-    draw(f = 255, s = -1, sw = 1){
-        this.fillstroke(f, s, sw);
+    draw(f = -1, s = 255, sw = 1){
+        this.fill_stroke(f, s, sw);
         let p = this.pos;
         ellipse(p.x, p.y, this.rad*2, this.rad*2);
         let l = p.copy().add(this.vel.copy().setMag(this.rad));
@@ -179,8 +181,8 @@ class Rect extends Thing{
         this.h = dims[1];
     }
 
-    draw(f = 255, s = -1, sw = 1){
-        this.fillstroke(f, s, sw);
+    draw(f = -1, s = 255, sw = 1){
+        this.fill_stroke(f, s, sw);
         let p = this.pos;
         rectMode(CENTER);
         rect(p.x, p.y, this.w, this.h);
