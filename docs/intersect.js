@@ -170,13 +170,13 @@ function intersect_rect_line(r_pos, r_w, r_h, l_posa, l_posb, return_points = tr
 function vector_list_remove_duplicates(l){
     let out = [];
     l.forEach(v => {
-        if(!vector_list_contains(out, v)){
+        if(!object_list_contains(out, v)){
             out.push(v);
         }
     });
     return out;
 }
 
-function vector_list_contains(l, v){
-    return l.reduce((a, b) => a || b.equals(v), false);
+function object_list_contains(l, o){
+    return l.reduce((a, b) => a || b.equals(o), false);
 }

@@ -1,49 +1,48 @@
 class ThingCollider{
     constructor(){}
 
-    collide(a, b){
-        if(a.collisionType === CollisionType.NONE || b.collisionType === CollisionType.NONE) return;
+    check_collision(a, b){
+        if(a.collisionType === CollisionType.NONE || b.collisionType === CollisionType.NONE) return false;
+        return a.intersects(b);
+    }
 
-        let intersection = a.intersects(b);
+    collide(a, b, intersection){
+        switch(a.thingType){
 
-        if(intersection){
-            switch(a.thingType){
+            case ThingType.CIRCLE:
+                switch(b.thingType){
 
-                case ThingType.CIRCLE:
-                    switch(b.thingType){
+                    case ThingType.CIRCLE:
+                        this.circle_circle(a, b);
+                        return;
+        
+                    case ThingType.LINE:
+                        this.circle_line(a, b, intersection);
+                        return;
+                
+                    default:
+                        return;
+                }
 
-                        case ThingType.CIRCLE:
-                            this.circle_circle(a, b);
-                            return;
-            
-                        case ThingType.LINE:
-                            this.circle_line(a, b, intersection);
-                            return;
-                    
-                        default:
-                            return;
-                    }
+            case ThingType.LINE:
+                switch(b.thingType){
+        
+                    case ThingType.CIRCLE:
+                        this.circle_line(b, a, intersection);
+                        return;
+                
+                    default:
+                        return;
+                }
 
-                case ThingType.LINE:
-                    switch(b.thingType){
-            
-                        case ThingType.CIRCLE:
-                            this.circle_line(b, a, intersection);
-                            return;
-                    
-                        default:
-                            return;
-                    }
-
-                default:
-                    return;
-            }
+            default:
+                return;
         }
     }
 
     circle_circle(a, b){
-        // stroke(255,0,0);
-        // line(a.pos.x, a.pos.y, b.pos.x, b.pos.y);
+        stroke(255,0,0);
+        line(a.pos.x, a.pos.y, b.pos.x, b.pos.y);
         // STATICS
         let a_static = (a.collisionType === CollisionType.STATIC);
         let b_static = (b.collisionType === CollisionType.STATIC);
@@ -72,9 +71,9 @@ class ThingCollider{
         }
         pre_pos_diff = a.pos.copy().sub(b.pos);
         let overlap = pre_pos_diff.setMag(pre_pos_diff.mag() - a.rad - b.rad);
-        
+
         if(!(a_static || b_static)){
-            overlap = overlap.mult(0.5);
+            overlap.mult(0.5);
         }
 
         if(!a_static){
@@ -99,8 +98,8 @@ class ThingCollider{
         let a_momentum = (a_dot_normal * mass_diff + 2 * b.mass * b_dot_normal) / (mass_total);
         let b_momentum = (b_dot_normal * -mass_diff + 2 * a.mass * a_dot_normal) / (mass_total);
         
-        let a_new_vel = tangent.copy().mult(a.vel.copy().dot(tangent)).add(normal.copy().mult(a_momentum));
-        let b_new_vel = tangent.copy().mult(b.vel.copy().dot(tangent)).add(normal.copy().mult(b_momentum));
+        let a_new_vel = tangent.copy().mult(a.vel.dot(tangent)).add(normal.copy().mult(a_momentum));
+        let b_new_vel = tangent.copy().mult(b.vel.dot(tangent)).add(normal.copy().mult(b_momentum));
 
         a.setVel([a_new_vel.x, a_new_vel.y]);
         b.setVel([b_new_vel.x, b_new_vel.y]);

@@ -96,7 +96,7 @@ class Point extends Thing{
 }
 
 class Line extends Thing{
-    constructor(posA = [0, 0], posB = [10, 10], vel, acc, mass = 0, collisionType = CollisionType.STATIC){
+    constructor(posA = [0, 0], posB = [10, 10], vel = 0, acc = 0, mass = 0, collisionType = CollisionType.STATIC){
         super(mass, ThingType.LINE, collisionType);
         this.posA = to_2d_vector(posA);
         this.posB = to_2d_vector(posB);
@@ -136,7 +136,7 @@ class Line extends Thing{
 }
 
 class Circle extends Thing{
-    constructor(pos = [0, 0], vel = [0, 0], acc = [0, 0], rad, collisionType = CollisionType.STATIC, mass = rad){
+    constructor(pos = [0, 0], vel = [0, 0], acc = [0, 0], rad = 10, collisionType = CollisionType.STATIC, mass = rad){
         super(mass, ThingType.CIRCLE, collisionType);
         this.pos = to_2d_vector(pos);
         this.vel = to_2d_vector(vel);
@@ -145,12 +145,13 @@ class Circle extends Thing{
         this.bbox = [rad*2, rad*2]
     }
 
-    draw(f = -1, s = 255, sw = 1){
+    draw(f = 0, s = 255, sw = 1){
         this.fill_stroke(f, s, sw);
         let p = this.pos;
         ellipse(p.x, p.y, this.rad*2, this.rad*2);
         let l = p.copy().add(this.vel.copy().setMag(this.rad));
         line(p.x, p.y, l.x, l.y);
+        // point(p.x, p.y);
     }
 
     intersects(other){
@@ -174,7 +175,7 @@ class Circle extends Thing{
 }
 
 class Rect extends Thing{
-    constructor(pos = [0, 0], vel = [0, 0], acc = [0, 0], dims, mass = 0, collisionType = CollisionType.STATIC){
+    constructor(pos = [0, 0], vel = [0, 0], acc = [0, 0], dims = [10, 10], mass = 0, collisionType = CollisionType.STATIC){
         super(mass, ThingType.RECT, collisionType);
         this.pos = to_2d_vector(pos);
         this.vel = to_2d_vector(vel);

@@ -5,6 +5,7 @@ class Scene{
         this.w = windowWidth;
         this.h = windowHeight;
         this.things = [];
+        this.collisionPairs = [];
         this.collisionGraph = new QuadTree(this.x, this.y, this.w, this.h);
         this.collider = new ThingCollider();
     }
@@ -15,24 +16,57 @@ class Scene{
         this.run();
     }
 
-    add_object(thing){
+    add_thing(thing){
         this.things.push(thing);
     }
 
-    remove_object(){
+    remove_thing(){
     }
 
     run(){
         this.collisionGraph.reset();
+        this.collisionPairs = [];
         this.things.forEach(thing => {
-            thing.move();
             this.collisionGraph.insert(thing);
         });
+        checked_collisions = 0;
         this.things.forEach(thing => {
-            let nearby = this.collisionGraph.find_circle(thing.pos, thing.bbox[0] + thing.vel.mag()*2);
-            // let nearby = this.collisionGraph.find_rect(thing.pos, max(thing.bbox) + thing.vel.mag()*2, max(thing.bbox) + thing.vel.mag()*2);
-            nearby.forEach(othing => {if(thing !== othing) this.collider.collide(othing, thing)});
+            let search_radius = thing.bbox[0] + 1 + thing.vel.mag()*2
+            let nearby = this.collisionGraph.search_circle(thing.pos, search_radius);
+            // let nearby = this.collisionGraph.search_rect(thing.pos, max(thing.bbox) + thing.vel.mag()*2, max(thing.bbox) + thing.vel.mag()*2);
+            nearby.forEach(othing => {
+                if(thing !== othing){
+                    let collides = this.collider.check_collision(othing, thing);
+                    checked_collisions ++;
+                    
+                    if(collides){
+                        let newPair = new CollidedThingPair(othing, thing, collides);
+                        if(!object_list_contains(this.collisionPairs, newPair)){
+                            this.collisionPairs.push(newPair);
+                        }
+                    }
+                }
+            });
         });
+        colliding_pairs = this.collisionPairs.length;
+        this.collisionPairs.forEach(pair => {
+            this.collider.collide(pair.a, pair.b, pair.intersection); 
+        })
+        this.things.forEach(thing => {
+            thing.move();
+        });
+    }
+}
+
+class CollidedThingPair{
+    constructor(a, b, i){
+        this.a = a;
+        this.b = b;
+        this.intersection = i;
+    }
+
+    equals(opair){
+        return (this.a === opair.a && this.b === opair.b) || (this.a === opair.b && this.b === opair.a);
     }
 }
 
@@ -90,7 +124,7 @@ class QuadTree{
         }
     }
 
-    find_rect(pos, w, h){ //search for things in a rectangle around a point pos
+    search_rect(pos, w, h){ //search for things in a rectangle around a point pos
         let found_things = [];
 
         if(!intersect_rect_rect(this.pos, this.w, this.h, pos, w, h)) return found_things;
@@ -103,31 +137,31 @@ class QuadTree{
 
         if(this.TL === null) return found_things;
 
-        found_things = found_things.concat(this.TL.find_rect(pos, w, h))
-        found_things = found_things.concat(this.TR.find_rect(pos, w, h))
-        found_things = found_things.concat(this.BL.find_rect(pos, w, h))
-        found_things = found_things.concat(this.BR.find_rect(pos, w, h))
+        found_things = found_things.concat(this.TL.search_rect(pos, w, h))
+        found_things = found_things.concat(this.TR.search_rect(pos, w, h))
+        found_things = found_things.concat(this.BL.search_rect(pos, w, h))
+        found_things = found_things.concat(this.BR.search_rect(pos, w, h))
         
         return found_things;
     }
 
-    find_circle(pos, rad){ //search for things in a circle around a point pos
+    search_circle(pos, rad){ //search for things in a circle around a point pos
         let found_things = [];
 
         if(!intersect_circle_rect(pos, rad, this.pos, this.w, this.h)) return found_things;
 
         this.things.forEach(thing => {
-            if(intersect_point_circle(thing.pos, pos, rad)){
+            if(intersect_point_circle(thing.pos, pos, rad, false)){
                 found_things.push(thing);
             }
         });
 
         if(this.TL === null) return found_things;
 
-        found_things = found_things.concat(this.TL.find_circle(pos, rad))
-        found_things = found_things.concat(this.TR.find_circle(pos, rad))
-        found_things = found_things.concat(this.BL.find_circle(pos, rad))
-        found_things = found_things.concat(this.BR.find_circle(pos, rad))
+        found_things = found_things.concat(this.TL.search_circle(pos, rad))
+        found_things = found_things.concat(this.TR.search_circle(pos, rad))
+        found_things = found_things.concat(this.BL.search_circle(pos, rad))
+        found_things = found_things.concat(this.BR.search_circle(pos, rad))
         
         return found_things;
     }
