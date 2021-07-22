@@ -38,8 +38,13 @@ class Scene{
 
         //identify colliding pairs
         this.things.forEach(thing => {
-            let search_radius = thing.bbox[0] - 1e-4 + thing.vel.mag()*2
+            let search_radius = thing.bbox[0] * (1 + thing.vel.mag())
+            if(thing.vel.mag() === 0) search_radius = thing.bbox[0] * 0.999
             let nearby = this.collisionGraph.search_circle(thing.pos, search_radius);
+            // noFill();
+            // stroke(255,0,0);
+            // ellipse(thing.pos.x, thing.pos.y, search_radius * 2);
+
             // let nearby = this.collisionGraph.search_rect(thing.pos, max(thing.bbox) + thing.vel.mag()*2, max(thing.bbox) + thing.vel.mag()*2);
             nearby.forEach(othing => {
                 if(thing !== othing){
@@ -92,7 +97,7 @@ class Scene{
             }
         }else if(this.mouseClick === 1){ //rising edge
             if(!this.selectedThing){
-                this.selectedThing = scene.add_thing(new Circle([mouseX,mouseY], [0, 0], 0, 15, CollisionType.DYNAMIC));
+                this.selectedThing = scene.add_thing(new Circle([mouseX,mouseY], [0, 0], 0, 20, CollisionType.DYNAMIC));
                 this.selectedThing.highlight();
             }
             this.selectedThing.lock();
@@ -147,6 +152,116 @@ class QuadTree{
         this.TR = null;
         this.BL = null;
         this.BR = null;
+    }
+
+    reset(){
+        this.things = [];
+        this.TL = null;
+        this.TR = null;
+        this.BL = null;
+        this.BR = null;
+    }
+
+    divide(){
+        let hw = this.w / 2;
+        let hh = this.h / 2;
+        let qw = hw / 2;
+        let qh = hh / 2;
+        let x = this.pos.x;
+        let y = this.pos.y
+        this.TL = new QuadTree(x - qw, y - qh, hw, hh);
+        this.TR = new QuadTree(x + qw, y - qh, hw, hh);
+        this.BL = new QuadTree(x - qw, y + qh, hw, hh);
+        this.BR = new QuadTree(x + qw, y + qh, hw, hh);
+    }
+
+    insert(thing){
+        if(!intersect_point_rect(thing.pos, this.pos, this.w, this.h)){
+            return false;
+        }
+
+        if(this.things.length < this.capacity && this.TL == null){
+            this.things.push(thing);
+            return true;
+        }else{
+            if(this.TL === null) this.divide();
+
+            if(this.TL.insert(thing)) return true;
+            if(this.TR.insert(thing)) return true;
+            if(this.BL.insert(thing)) return true;
+            if(this.BR.insert(thing)) return true;
+
+            return false;
+        }
+    }
+
+    search_rect(pos, w, h){ //search for things in a rectangle around a point pos
+        let found_things = [];
+
+        if(!intersect_rect_rect(this.pos, this.w, this.h, pos, w, h)) return found_things;
+
+        this.things.forEach(thing => {
+            if(intersect_point_rect(thing.pos, pos, w, h)){
+                found_things.push(thing);
+            }
+        });
+
+        if(this.TL === null) return found_things;
+
+        found_things = found_things.concat(this.TL.search_rect(pos, w, h))
+        found_things = found_things.concat(this.TR.search_rect(pos, w, h))
+        found_things = found_things.concat(this.BL.search_rect(pos, w, h))
+        found_things = found_things.concat(this.BR.search_rect(pos, w, h))
+        
+        return found_things;
+    }
+
+    search_circle(pos, rad){ //search for things in a circle around a point pos
+        let found_things = [];
+
+        if(!intersect_circle_rect(pos, rad, this.pos, this.w, this.h)) return found_things;
+
+        this.things.forEach(thing => {
+            if(intersect_point_circle(thing.pos, pos, rad, false)){
+                found_things.push(thing);
+            }
+        });
+
+        if(this.TL === null) return found_things;
+
+        found_things = found_things.concat(this.TL.search_circle(pos, rad))
+        found_things = found_things.concat(this.TR.search_circle(pos, rad))
+        found_things = found_things.concat(this.BL.search_circle(pos, rad))
+        found_things = found_things.concat(this.BR.search_circle(pos, rad))
+        
+        return found_things;
+    }
+
+    draw(){
+        stroke(255);
+        noFill();
+        rectMode(CENTER);
+        rect(this.pos.x, this.pos.y, this.w, this.h);
+
+        if(this.TL !== null){
+            this.TL.draw();
+            this.TR.draw();
+            this.BL.draw();
+            this.BR.draw();
+        }
+    }
+}
+
+// https://en.wikipedia.org/wiki/R-tree
+class RTree{
+    constructor(x, y, w, h){ //(x, y) center; (w, h) dimensions
+        this.things = [];
+        this.pos = createVector(x, y)
+        this.w = w;
+        this.h = h;
+        this.capacity = 2;
+        this.items = [];
+        this.leaf = true;
     }
 
     reset(){

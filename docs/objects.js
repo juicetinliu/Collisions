@@ -43,8 +43,8 @@ class Thing{
     move(friction = 0.999){
         if(this.locked) return;
 
-        this.vel.add(this.acc);
-        this.pos.add(this.vel);
+        this.vel.add(this.acc.copy().mult(deltaTime/15));
+        this.pos.add(this.vel.copy().mult(deltaTime/15));
 
         if(this.collisionType !== CollisionType.STATIC){
             this.vel.mult(friction);
@@ -130,6 +130,9 @@ class Line extends Thing{
         super(mass, ThingType.LINE, collisionType);
         this.posA = to_2d_vector(posA);
         this.posB = to_2d_vector(posB);
+        let mag = this.posB.copy().sub(this.posA);
+        this.bbox = [abs(mag.x), abs(mag.y)]
+        this.pos = this.posA.copy().add(mag.div(2))
     }
 
     move(){}
@@ -139,6 +142,9 @@ class Line extends Thing{
         let p_a = this.posA;
         let p_b = this.posB;
         line(p_a.x, p_a.y, p_b.x, p_b.y);
+
+        // rectMode(CENTER);
+        // rect(this.pos.x, this.pos.y, this.bbox[0], this.bbox[1]);
     }
 
     setPos(newpos){
