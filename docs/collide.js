@@ -53,19 +53,19 @@ class ThingCollider{
         if(!(a_static || b_static)){ //neither are static
             if(pre_pos_diff.magSq() < 1e-6){ //add random noise if objects spawn exactly on each other
                 let new_shift_pos = b.pos.copy().add(p5.Vector.random2D().setMag(1e-3));
-                b.setPos([new_shift_pos.x, new_shift_pos.y]);
+                b.set_pos([new_shift_pos.x, new_shift_pos.y]);
                 console.log("shifting");
             }
         }else if(a_static){
             if(pre_pos_diff.magSq() < 1e-6){
                 let new_shift_pos = b.pos.copy().add(p5.Vector.random2D().setMag(1e-3));
-                b.setPos([new_shift_pos.x, new_shift_pos.y]);
+                b.set_pos([new_shift_pos.x, new_shift_pos.y]);
                 console.log("shifting");
             }
         }else if(b_static){
             if(pre_pos_diff.magSq() < 1e-6){
                 let new_shift_pos = a.pos.copy().add(p5.Vector.random2D().setMag(1e-3));
-                a.setPos([new_shift_pos.x, new_shift_pos.y]);
+                a.set_pos([new_shift_pos.x, new_shift_pos.y]);
                 console.log("shifting");
             }
         }
@@ -78,11 +78,11 @@ class ThingCollider{
 
         if(!a_static){
             let a_new_pos = a.pos.copy().sub(overlap);
-            a.setPos([a_new_pos.x, a_new_pos.y]);
+            a.set_pos([a_new_pos.x, a_new_pos.y]);
         }
         if(!b_static){
             let b_new_pos = b.pos.copy().add(overlap);
-            b.setPos([b_new_pos.x, b_new_pos.y]);            
+            b.set_pos([b_new_pos.x, b_new_pos.y]);            
         }
 
         //momentum and velocity calculations
@@ -102,21 +102,21 @@ class ThingCollider{
         let b_new_vel = tangent.copy().mult(b.vel.dot(tangent)).add(normal.copy().mult(b_momentum));
 
         if(!a_static){
-            a.setVel([a_new_vel.x, a_new_vel.y]);
+            a.set_vel([a_new_vel.x, a_new_vel.y]);
         }
         if(!b_static){
-            b.setVel([b_new_vel.x, b_new_vel.y]);
+            b.set_vel([b_new_vel.x, b_new_vel.y]);
         }
     }
 
     circle_line(a, b, intersection){
         let new_pos = intersection.copy().add(a.pos.copy().sub(intersection).setMag(a.rad));
-        a.setPos([new_pos.x, new_pos.y]);
+        a.set_pos([new_pos.x, new_pos.y]);
 
         let line_dir = b.posB.copy().sub(b.posA);
         let normal = createVector(-line_dir.y, line_dir.x).normalize();
         let new_vel = a.vel.copy().sub(normal.mult(2 * a.vel.copy().dot(normal)));
 
-        a.setVel([new_vel.x, new_vel.y]);
+        a.set_vel([new_vel.x, new_vel.y]);
     }
 }

@@ -12,11 +12,17 @@ function intersect_point_circle(p_pos, c_pos, c_rad, inclusive = true){
     }
 }
 
-function intersect_point_rect(p_pos, r_pos, r_w, r_h, inclusive = true){
+function intersect_point_rect(p_pos, r_pos, r_dims, inclusive = true){
+    let p_x = p_pos.x;
+    let p_y = p_pos.y;
+    let r_x = r_pos.x;
+    let r_y = r_pos.y;
+    let r_half_w = r_dims.x/2;
+    let r_half_h = r_dims.y/2;
     if(inclusive){
-        return p_pos.x <= r_pos.x + r_w/2 && p_pos.x >= r_pos.x - r_w/2 && p_pos.y <= r_pos.y + r_h/2 && p_pos.y >= r_pos.y - r_h/2;
+        return p_x <= r_x + r_half_w && p_x >= r_x - r_half_w && p_y <= r_y + r_half_h && p_y >= r_y - r_half_h;
     }else{
-        return p_pos.x < r_pos.x + r_w/2 && p_pos.x > r_pos.x - r_w/2 && p_pos.y < r_pos.y + r_h/2 && p_pos.y > r_pos.y - r_h/2;
+        return p_x < r_x + r_half_w && p_x > r_x - r_half_w && p_y < r_y + r_half_h && p_y > r_y - r_half_h;
     }
 }
 
@@ -25,30 +31,38 @@ function intersect_circle_circle(c1_pos, c1_rad, c2_pos, c2_rad){
     return c1_pos.copy().sub(c2_pos).magSq() <= rad_sum * rad_sum;
 }
 
-function intersect_circle_rect(c_pos, c_rad, r_pos, r_w, r_h){
+function intersect_circle_rect(c_pos, c_rad, r_pos, r_dims){
     let c_x = c_pos.x;
     let c_y = c_pos.y;
     let r_x = r_pos.x;
     let r_y = r_pos.y;
+    let r_half_w = r_dims.x/2;
+    let r_half_h = r_dims.y/2;
+
     let temp_X = c_x;
     let temp_Y = c_y;
 
-    if(c_x < r_x - r_w/2){
-        temp_X = r_x - r_w/2;
-    }else if(c_x > r_x + r_w/2){
-        temp_X = r_x + r_w/2;
+    if(c_x < r_x - r_half_w){
+        temp_X = r_x - r_half_w;
+    }else if(c_x > r_x + r_half_w){
+        temp_X = r_x + r_half_w;
     }
-    if(c_y < r_y - r_h/2){
-        temp_Y = r_y - r_h/2;
-    }else if(c_y > r_y + r_h/2){
-        temp_Y = r_y + r_h/2;
+    if(c_y < r_y - r_half_h){
+        temp_Y = r_y - r_half_h;
+    }else if(c_y > r_y + r_half_h){
+        temp_Y = r_y + r_half_h;
     }
 
     let temp = createVector(temp_X, temp_Y);
     return intersect_point_circle(temp, c_pos, c_rad);
 }
 
-function intersect_rect_rect(r1_pos, r1_w, r1_h, r2_pos, r2_w, r2_h){
+function intersect_rect_rect(r1_pos, r1_dims, r2_pos, r2_dims){
+    let r1_w = r1_dims.x;
+    let r1_h = r1_dims.y;
+    let r2_w = r2_dims.x;
+    let r2_h = r2_dims.y;
+    
     let r1_x = r1_pos.x - r1_w/2;
     let r1_y = r1_pos.y - r1_h/2;
     let r2_x = r2_pos.x - r2_w/2;
@@ -140,13 +154,13 @@ function intersect_line_line(l1_posa, l1_posb, l2_posa, l2_posb, return_points =
     return return_points ? [false] : false;
 }
 
-function intersect_rect_line(r_pos, r_w, r_h, l_posa, l_posb, return_points = true){
-    if(intersect_point_rect(l_posa, r_pos, r_w, r_h, false) && intersect_point_rect(l_posb, r_pos, r_w, r_h, false)){
+function intersect_rect_line(r_pos, r_dims, l_posa, l_posb, return_points = true){
+    if(intersect_point_rect(l_posa, r_pos, r_dims, false) && intersect_point_rect(l_posb, r_pos, r_dims, false)){
         return true;
     }
 
-    let half_w = r_w / 2;
-    let half_h = r_h / 2;
+    let half_w = r_dims.x / 2;
+    let half_h = r_dims.y / 2;
     
     let r_1 = r_pos.copy().add(-half_w, -half_h);
     let r_2 = r_pos.copy().add(half_w, -half_h);
