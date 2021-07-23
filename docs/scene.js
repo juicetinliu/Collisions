@@ -37,12 +37,9 @@ class Scene{
 
         //identify colliding pairs
         this.things.forEach(thing => {
-            let search_radius = thing.boundingBox.dims.x * (1 + thing.vel.mag())
-            if(thing.vel.mag() === 0) search_radius = thing.boundingBox.dims.x * 0.999
+            let search_radius = thing.boundingBox.dims.x * (1 + thing.vel.mag());
+            if(thing.vel.mag() === 0) search_radius = thing.boundingBox.dims.x/2 - 1;
             let nearby = this.collisionGraph.search_circle(thing.pos, search_radius);
-            // noFill();
-            // stroke(255,0,0);
-            // ellipse(thing.pos.x, thing.pos.y, search_radius * 2);
 
             // let nearby = this.collisionGraph.search_rect(thing.pos, max(thing.bbox) + thing.vel.mag()*2, max(thing.bbox) + thing.vel.mag()*2);
             nearby.forEach(othing => {

@@ -251,10 +251,10 @@ class Circle extends Thing{
 }
 
 class Rect extends Thing{
-    constructor(pos = [0, 0], vel = [0, 0], acc = [0, 0], dims = [10, 10], mass = 0, collisionType = CollisionType.STATIC){
+    constructor(pos = [0, 0], dims = [10, 10], vel = [0, 0], acc = [0, 0], mass = 0, collisionType = CollisionType.STATIC){
         super(pos, vel, acc, mass, ThingType.RECT, collisionType);
         this.dims = to_2d_vector(dims);
-        this.boundingBox = new AABB(this.pos, this.dims);
+        this.boundingBox = new AABB(this.pos.x, this.pos.y, this.dims.x, this.dims.y);
     }
 
     draw(f = -1, s = 255, sw = 1){
