@@ -175,14 +175,14 @@ function intersect_rect_line(r_pos, r_dims, l_posa, l_posb, return_points = true
 
     if(intersections.reduce((a, b) => a || b, false)){
         if(return_points){
-            return vector_list_remove_duplicates(intersections.filter(i => i !== false));
+            return object_list_remove_duplicates(intersections.filter(i => i !== false));
         }
         return true;
     }
     return;
 }
 
-function vector_list_remove_duplicates(l){
+function object_list_remove_duplicates(l){
     let out = [];
     l.forEach(v => {
         if(!object_list_contains(out, v)){
