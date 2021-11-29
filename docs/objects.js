@@ -1,3 +1,5 @@
+const MIN_VEL_TOLERANCE = 1e-4;
+
 const types_of_things = {
     POINT: "POINT",
     LINE: "LINE",
@@ -7,8 +9,8 @@ const types_of_things = {
 
 const collision_properties = {
     NONE: "NONE", //won't collide at all
-    STATIC: "STATIC", //won't react to collisions like a wall
-    DYNAMIC: "DYNAMIC", //will react to collisions like a ball
+    STATIC: "STATIC", //will react to collisions like a wall (won't react itself)
+    DYNAMIC: "DYNAMIC", //will react to collisions like a ball (will react itself)
 }
 
 let ThingType = types_of_things;
@@ -30,7 +32,7 @@ class Thing{
 
     draw(){}
 
-    draw_bounding_box(){
+    draw_with_bounding_box(){
         this.draw();
         this.boundingBox.draw();
     }
@@ -61,8 +63,8 @@ class Thing{
             this.vel.mult(friction);
             this.acc.mult(friction);
         }
-        if(this.vel.magSq() < 1e-4) this.vel.setMag(0);
-        if(this.acc.magSq() < 1e-4) this.acc.setMag(0);
+        if(this.vel.magSq() < MIN_VEL_TOLERANCE) this.vel.setMag(0);
+        if(this.acc.magSq() < MIN_VEL_TOLERANCE) this.acc.setMag(0);
     }
 
     lock(){
@@ -184,7 +186,7 @@ class Line extends Thing{
 
     draw(s = 255, sw = 1){
         this.fill_stroke(-1, s, sw);
-        line_vec(this.posA, this.posB);
+        draw_line_vec(this.posA, this.posB);
     }
 
     intersects(other){
@@ -220,10 +222,11 @@ class Circle extends Thing{
 
     draw(f = -1, s = 255, sw = 1){
         this.collisionType === CollisionType.STATIC ? this.fill_stroke(max(f, 100), s, sw) : this.fill_stroke(f, s, sw);
-        ellipse_vec(this.pos, this.rad)
-        // let l = p.copy().add(this.vel.copy().setMag(this.rad));
-        // line(p.x, p.y, l.x, l.y);
-        // point(p.x, p.y);
+        draw_ellipse_vec(this.pos, this.rad);
+    }
+
+    get_bounding_box_area(){
+        this.boundingBox.area();
     }
 
     intersects(other){
@@ -260,7 +263,7 @@ class Rect extends Thing{
     draw(f = -1, s = 255, sw = 1){
         this.fill_stroke(f, s, sw);
         let p = this.pos;
-        rect_center_vec(this.pos, this.dims);
+        draw_rect_center_vec(this.pos, this.dims);
     }
 
     intersects(other){
@@ -305,25 +308,25 @@ function abs_vec(vector){
     return createVector(abs(vector.x), abs(vector.y));
 }
 
-function line_vec(point_a, point_b){
+function draw_line_vec(point_a, point_b){
     line(point_a.x, point_a.y, point_b.x, point_b.y);
 }
 
-function ellipse_vec(center, radius){
+function draw_ellipse_vec(center, radius){
     ellipse(center.x, center.y, radius*2, radius*2);
 }
 
-function rect_center_vec(center, dims){
+function draw_rect_center_vec(center, dims){
     rectMode(CENTER);
     rect(center.x, center.y, dims.x, dims.y);
 }
 
-function rect_corner_vec(corner_tl, dims){
+function draw_rect_corner_vec(corner_tl, dims){
     rectMode(CORNER);
     rect(corner_tl.x, corner_tl.y, dims.x, dims.y);
 }
 
-function rect_corners_vec(corner_tl, corner_br){
+function draw_rect_corners_vec(corner_tl, corner_br){
     rectMode(CORNERS);
     rect(corner_tl.x, corner_tl.y, corner_br.x, corner_br.y);
 }

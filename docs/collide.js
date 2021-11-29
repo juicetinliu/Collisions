@@ -3,6 +3,7 @@ class ThingCollider{
 
     check_collision(a, b){
         if(a.collisionType === CollisionType.NONE || b.collisionType === CollisionType.NONE) return false;
+        
         return a.intersects(b);
     }
 
@@ -43,13 +44,15 @@ class ThingCollider{
     circle_circle(a, b){
         // stroke(255,0,0);
         // line(a.pos.x, a.pos.y, b.pos.x, b.pos.y);
+        
         // STATICS
         let a_static = (a.collisionType === CollisionType.STATIC);
         let b_static = (b.collisionType === CollisionType.STATIC);
         
-        if(a_static && b_static) return; //both static
+        if(a_static && b_static) return; //both static -> don't collide
+        
         let pre_pos_diff = a.pos.copy().sub(b.pos);
-
+        
         if(!(a_static || b_static)){ //neither are static
             if(pre_pos_diff.magSq() < 1e-6){ //add random noise if objects spawn exactly on each other
                 let new_shift_pos = b.pos.copy().add(p5.Vector.random2D().setMag(1e-3));

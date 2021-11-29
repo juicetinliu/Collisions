@@ -1,6 +1,11 @@
 let scene;
 let checked_collisions = 0;
-let colliding_pairs = 0
+let colliding_pairs = 0;
+
+let thistree;
+
+let FUNCTION_CALLS = 0;
+let toggle = false;
 
 function setup() {
     renderer = createCanvas(windowWidth, windowHeight);
@@ -28,6 +33,13 @@ function setup() {
     
     frameRate(60);
     smooth();
+    
+    // let pos = createVector(windowWidth/2, windowHeight/2);
+    // let dims = createVector(windowWidth, windowHeight);
+    // thistree = new Tree(pos.x, pos.y, dims.x, dims.y);
+    // for(let i = 0; i < 100; i++){
+    //     thistree.insert(new Circle([random(windowWidth), random(windowHeight)], 0, 0, 10, CollisionType.DYNAMIC))
+    // }
 }
 
 
@@ -52,7 +64,27 @@ function draw() {
     fill(255);
     text(checked_collisions, 20, 60);
     text(colliding_pairs, 20, 80);
+    // text(FUNCTION_CALLS, 20, 100);
+
+    // if(toggle) thistree.draw();
+    // let searchedObjects = thistree.search_circle(createVector(mouseX, mouseY), 200);
+    // noFill();
+    // stroke(255,0,0);
+    // ellipse(mouseX, mouseY, 400);
+    // searchedObjects.forEach(o => o.draw_with_bounding_box());
 }
 
 function mouseDragged(){
+}
+
+function mousePressed(){
+    // thistree.insert(new Circle([mouseX, mouseY], 0, 0, 10, CollisionType.DYNAMIC))
+    // console.log(thistree);
+}
+
+function keyPressed(){
+    // if(keyCode === 88){
+    //     toggle = !toggle;
+    //     console.log(thistree)
+    // }
 }
