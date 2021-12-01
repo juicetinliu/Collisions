@@ -1,4 +1,4 @@
-const MAX_TREE_AREA = 1e10;
+const MAX_AREA_SCORE = 1e10;
 
 class Scene{
     constructor(){
@@ -248,15 +248,14 @@ class QuadTree{
     }
 }
 
+//https://box2d.org/files/ErinCatto_DynamicBVH_GDC2019.pdf
 class TreeNode{
     constructor(parent, thing = null, lr = 0){
         this.parent = parent;
         this.isLeaf = true; //leaf if node has no left and right and has thing
 
         this.depth = 0;
-        this.id = ".";
         
-
         this.left = null;
         this.right = null;
 
@@ -264,20 +263,12 @@ class TreeNode{
 
         if(parent){
             this.depth = parent.depth + 1;
-            this.id = parent.id + (this.lrchild === 0 ? ".l" : ".r");
         }
 
         this.thing = thing;
         if(thing){
             this.boundingBox = thing.boundingBox;
-        }
-    }
-
-    recalculate_bounding_box(){
-        if(!this.isLeaf){
-            this.right.recalculate_bounding_box();
-            this.left.recalculate_bounding_box();
-            this.boundingBox = this.left.boundingBox.union_AABB(this.right.boundingBox);
+            this.scoringBoundingBox = this.boundingBox;
         }
     }
 
@@ -285,28 +276,79 @@ class TreeNode{
         this.parent = parent;
     }
 
-    split_node(leftThing, rightThing){
-        this.left = new TreeNode(this, leftThing, 0);
-        this.right = new TreeNode(this, rightThing, 1);
+    set_thing(thing){
+        this.thing = thing;
+    }
+
+    set_lrchild(lrchild){
+        this.lrchild = lrchild;
+    }
+
+    set_child_from_lr(lrchild, node){
+        if(lrchild === 0){
+            this.left = node;
+        }else{
+            this.right = node;
+        }
+    }
+
+    set_left_right(left, right, changeLR = false){
+        if(left instanceof TreeNode){
+            this.left = left;
+            if(changeLR){
+                this.left.set_parent(this);
+                this.left.set_lrchild(0);
+            }
+        }else{
+            this.left = new TreeNode(this, left, 0);
+        }
+
+        if(right instanceof TreeNode){
+            this.right = right;
+            if(changeLR){
+                this.right.set_parent(this);
+                this.right.set_lrchild(1);
+            }
+        }else{
+            this.right = new TreeNode(this, right, 1);
+        }
+
         this.boundingBox = this.left.boundingBox.union_AABB(this.right.boundingBox);
         this.thing = null;
         this.isLeaf = false;
     }
 
-    get_area_heuristic(){
-        if(this.isLeaf){
-            return 0;
-        }else{
-            return this.boundingBox.area() + this.right.get_area_heuristic() + this.left.get_area_heuristic();
+    update_bounding_boxes(){ //bottom -> top
+        this.boundingBox = this.left.boundingBox.union_AABB(this.right.boundingBox);
+        if(this.parent) this.parent.update_bounding_boxes();
+    }
+
+    update_depths(d = 0){
+        this.depth = d;
+        if(!this.isLeaf){
+            this.left.update_depths(d + 1);
+            this.right.update_depths(d + 1);
         }
     }
 
-    get_all_children(arr){
+    get_area_heuristic(bottomNode){ //traverse tree upwards from this node to calculate SAH
+        if(bottomNode){ //first node we calculate its new area
+            return this.boundingBox.area() + ((this.parent) ? this.parent.get_area_heuristic(false) : 0);
+        }else{
+            if(!this.parent){ //if this is root node
+                return 0;
+            }
+            this.scoringBoundingBox = this.left.boundingBox.union_AABB(this.right.boundingBox);
+            return this.scoringBoundingBox.area() - this.boundingBox.area() + this.parent.get_area_heuristic(false);
+        }
+    }
+
+    get_all_nodes(arr){
         arr.push(this);
 
         if(!this.isLeaf){
-            this.right.get_all_children(arr);
-            this.left.get_all_children(arr);
+            this.right.get_all_nodes(arr);
+            this.left.get_all_nodes(arr);
         }
         return arr;
     }
@@ -341,66 +383,142 @@ class TreeNode{
 class Tree{
     constructor(){ //(x, y) center; (w, h) dimensions
         this.things = [];
-        
         this.root = null;
 
         this.allNodes = [];
-        this.leafNodes = [];
+        // this.leafNodes = [];
     }
 
-    process_nodes(){
-        this.allNodes = this.root.get_all_children([]);
-        this.leafNodes = this.allNodes.filter(node => node.isLeaf);
-        this.root.recalculate_bounding_box();
+    update_allNodes(){
+        this.allNodes = this.root.get_all_nodes([]);
     }
 
-    get_tree_area_heuristic(){
-        return this.root.get_area_heuristic();
-    }
+    get_best_partner_node_branchnbound_bfs(newNode){
+        if(this.root.isLeaf){
+            return this.root;
+        }
+        
+        let queue = [this.root];
+        let bestPartnerNode = null;
+        let bestScore = MAX_AREA_SCORE;
+            
+        while(queue.length > 0){
+            let thisNode = queue.shift();
+            
+            let parentNode = thisNode.parent;
+            let thisNodeLrchild = thisNode.lrchild;
+            let tempNode = new TreeNode(parentNode); //create temporary node
+            tempNode.set_left_right(thisNode, newNode); //set left and right branches
+            
+            if(parentNode !== null){ //temporarily set parent node's left/right child
+                if(thisNodeLrchild === 0){
+                    parentNode.left = tempNode;
+                }else{
+                    parentNode.right = tempNode;
+                }
+            }
+            
+            let thisScore = tempNode.get_area_heuristic(true); //calculate heuristic starting from temp node towards root (don't calculate root)
+            let inheritedScore = thisScore - tempNode.boundingBox.area() + newNode.boundingBox.area();
 
-    insert(thing){
-        this.things.push(thing);
+            if(thisScore < bestScore){
+                bestScore = thisScore;
+                bestPartnerNode = thisNode;
+            }
+            if(parentNode !== null){
+                if(thisNodeLrchild === 0){
+                    parentNode.left = thisNode;
+                }else{
+                    parentNode.right = thisNode;
+                }
+            }
 
-        if(this.things.length === 1){
-            this.root = new TreeNode(null, thing);
-            this.process_nodes();
-            return true;
+            if(inheritedScore < bestScore){
+                if(thisNode.left){
+                    queue.push(thisNode.left);
+                }
+                if(thisNode.right){
+                    queue.push(thisNode.right);
+                }
+            }
         }
 
-        //find best partner node
+        return bestPartnerNode;
+    }
+    
+    get_best_partner_node(newNode){
+        if(this.root.isLeaf){
+            return this.root;
+        }
+        
         let bestPartnerNode = null;
-
-        if(this.things.length === 2){
-            bestPartnerNode = this.root;
-        }else{
-            let minArea = MAX_TREE_AREA;
+        let bestScore = MAX_AREA_SCORE;
             
-            this.leafNodes.forEach(node => {
-                let parentNode = node.parent;
-                let replacementNode = new TreeNode(parentNode);
-                replacementNode.split_node(node.thing, thing);
-                if (node.lrchild === 1) {
-                    parentNode.left = replacementNode;
+        this.allNodes.forEach(node => {
+            let parentNode = node.parent;
+
+            let tempNode = new TreeNode(parentNode); //create temporary node
+            tempNode.set_left_right(node, newNode); //set left and right branches
+            
+            if(parentNode !== null){ //temporarily set parent node's left/right child
+                if(node.lrchild === 0){
+                    parentNode.left = tempNode;
                 }else{
-                    parentNode.right = replacementNode;
+                    parentNode.right = tempNode;
                 }
-                let thisArea = this.get_tree_area_heuristic();
-                if(thisArea < minArea){
-                    minArea = thisArea;
-                    bestPartnerNode = node;
-                }
-                if (node.lrchild === 1) {
+            }
+            
+            let thisArea = tempNode.get_area_heuristic(true); //calculate heuristic starting from temp node towards root (don't calculate root)
+            if(thisArea < bestScore){
+                bestScore = thisArea;
+                bestPartnerNode = node;
+            }
+            if(parentNode !== null){
+                if(node.lrchild === 0){
                     parentNode.left = node;
                 }else{
                     parentNode.right = node;
                 }
-            });
-            // bestPartnerNode = this.leafNodes[0];
+            }
+        });
+        return bestPartnerNode;
+    }
+
+    insert(thing){
+        this.things.push(thing);
+        let newNode = new TreeNode(null, thing);
+
+        if(!this.root){ //empty tree, create node
+            this.root = newNode;
+            this.update_allNodes();
+            return true;
         }
+        
+        //find best partner node
+        // let bestPartnerNode = this.get_best_partner_node(newNode);
+        let bestPartnerNode = this.get_best_partner_node_branchnbound_bfs(newNode);
         //insert beneath best parent with previous partner node
-        bestPartnerNode.split_node(bestPartnerNode.thing, thing);
-        //rebalance tree
-        this.process_nodes();
+        let bestPartnerParentNode = bestPartnerNode.parent;
+        let bestPartnerLR = bestPartnerNode.lrchild;
+        let replacementNode = new TreeNode(bestPartnerParentNode);
+
+        if(!bestPartnerParentNode){ //if parent is null, we must be making a new root node
+            this.root = replacementNode;
+        }else{ //otherwise we set parent's left/right child to this new node
+            bestPartnerParentNode.set_child_from_lr(bestPartnerLR, replacementNode);
+        }
+
+        replacementNode.set_lrchild(bestPartnerLR); //also set the lrchild param
+        replacementNode.set_left_right(bestPartnerNode, newNode, true); //and create the new branches
+
+        //rebalance tree and ancestors
+        this.update_allNodes();
+        this.root.update_depths();
+        replacementNode.update_bounding_boxes();
+    }
+
+    remove(thing){
+
     }
 
     search_circle(pos, rad){ //search for things in a circle around a point pos
