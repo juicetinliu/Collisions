@@ -6,6 +6,7 @@ class Scene{
         this.dims = createVector(windowWidth, windowHeight);
         this.things = [];
         this.collisionPairs = [];
+        // this.collisionGraph = new SimpleArray();
         this.collisionGraph = new QuadTree(this.pos.x, this.pos.y, this.dims.x, this.dims.y);
         this.collider = new ThingCollider();
 
@@ -216,8 +217,10 @@ class QuadTree{
         let found_things = [];
 
         if(!intersect_circle_rect(pos, rad, this.pos, this.dims)) return found_things;
+        FUNCTION_CALLS += 1;
 
         this.things.forEach(thing => {
+            FUNCTION_CALLS += 1;
             if(thing.intersect_circle(pos, rad)){
                 found_things.push(thing);
             }
@@ -318,17 +321,12 @@ class TreeNode{
         this.isLeaf = false;
     }
 
-    update_bounding_boxes(){ //bottom -> top
+    update_bounding_box(){
         this.boundingBox = this.left.boundingBox.union_AABB(this.right.boundingBox);
-        if(this.parent) this.parent.update_bounding_boxes();
     }
 
-    update_depths(d = 0){
-        this.depth = d;
-        if(!this.isLeaf){
-            this.left.update_depths(d + 1);
-            this.right.update_depths(d + 1);
-        }
+    update_depth(){
+        if(this.parent) this.depth = this.parent.depth + 1;
     }
 
     get_area_heuristic(bottomNode){ //traverse tree upwards from this node to calculate SAH
@@ -354,10 +352,10 @@ class TreeNode{
     }
 
     intersect_circle(pos, rad, found){ //return all things that intersect a circle around a point pos
-        FUNCTION_CALLS += 1;
         if(!this.boundingBox.intersects_circle(pos, rad)) return;
-
+        FUNCTION_CALLS += 1;
         if(this.isLeaf){
+            FUNCTION_CALLS += 1;
             if(this.thing.intersect_circle(pos, rad)){
                 found.push(this.thing);
             }
@@ -371,9 +369,6 @@ class TreeNode{
     draw(){
         if(!this.isLeaf){
             this.boundingBox.draw();
-            let tpos = this.boundingBox.pos;
-            text(this.id, tpos.x, tpos.y);
-
             this.left.draw();
             this.right.draw();
         }
@@ -386,7 +381,12 @@ class Tree{
         this.root = null;
 
         this.allNodes = [];
-        // this.leafNodes = [];
+    }
+
+    reset(){
+        this.things = [];
+        this.root = null;
+        this.allNodes = [];
     }
 
     update_allNodes(){
@@ -445,7 +445,148 @@ class Tree{
 
         return bestPartnerNode;
     }
+
+    recalculate_tree(currNode){
+        if(currNode){
+            currNode.update_bounding_box();
+            currNode.update_depth();
+            this.recalculate_tree(currNode.parent);
+        }else{
+            return;
+        }
+    }
+
+    rebalance_tree(currNode){
+        let currNodeLeft = currNode.left;
+        let currNodeRight = currNode.right;
+        if(currNodeLeft && currNodeRight){
+            if(!currNodeLeft.isLeaf && !currNodeRight.isLeaf){
+                let b = currNodeLeft.boundingBox;
+                let c = currNodeRight.boundingBox;
+                let d = currNodeLeft.left.boundingBox;
+                let e = currNodeLeft.right.boundingBox;
+                let f = currNodeRight.left.boundingBox;
+                let g = currNodeRight.right.boundingBox;
+
+                let fug = f.union_AABB(g).area(); 
+                let due = d.union_AABB(e).area(); 
+
+                let bug = b.union_AABB(g).area(); 
+                let duc = d.union_AABB(c).area(); 
+                let fub = f.union_AABB(b).area(); 
+                let cue = c.union_AABB(e).area(); 
+
+                if(bug > fug && fub > fug && duc > due && cue > due){
+                    console.log("all sucks");
+                    return;
+                }
+                let swapType = -1;              
+                //bf swap - check bug and fug - 0
+                if(bug < fug) swapType = 0;
+                //ce swap - check due and duc - 1
+                if(duc < due) swapType = 1;
+                //bg swap - check fub and fug - 2
+                if(fub < fug) swapType = 2;
+                //cd swap - check due and cue - 3
+                if(cue < due) swapType = 3;
+                
+                let nb = currNodeLeft;
+                let nc = currNodeRight;
+                let nd = currNodeLeft.left;
+                let ne = currNodeLeft.right;
+                let nf = currNodeRight.left;
+                let ng = currNodeRight.right;
+
+                console.log(swapType)
+                switch(swapType){
+                    case 0:
+                        currNode.set_child_from_lr(0, nf)
+                        nb.set_parent(nc);
+                        nb.set_lrchild(0);
+                        nc.set_child_from_lr(0, nb)
+                        nf.set_parent(currNode);
+                        nf.set_lrchild(0);
+                        break;
+                    case 1:
+                        currNode.set_child_from_lr(1, ne)
+                        nc.set_parent(nb);
+                        nc.set_lrchild(1);
+                        nb.set_child_from_lr(1, nc)
+                        ne.set_parent(currNode);
+                        ne.set_lrchild(1);
+                        break;
+                    case 2:
+                        currNode.set_child_from_lr(0, ng)
+                        nb.set_parent(nc);
+                        nb.set_lrchild(1);
+                        nc.set_child_from_lr(1, nb)
+                        ng.set_parent(currNode);
+                        ng.set_lrchild(0);
+                        break;
+                    case 3:
+                        currNode.set_child_from_lr(1, nd)
+                        nc.set_parent(nb);
+                        nc.set_lrchild(0);
+                        nb.set_child_from_lr(0, nc)
+                        nd.set_parent(currNode);
+                        nd.set_lrchild(1);
+                        break;
+                    
+                    default:
+                        return;
+                }
+            }
+        }
+    }
     
+
+    insert(thing){
+        this.things.push(thing);
+        let newNode = new TreeNode(null, thing);
+
+        if(!this.root){ //empty tree, create node
+            this.root = newNode;
+            // this.update_allNodes();
+            return true;
+        }
+        
+        //find best partner node
+        let bestPartnerNode = this.get_best_partner_node_branchnbound_bfs(newNode);
+        //insert beneath best parent with previous partner node
+        let bestPartnerParentNode = bestPartnerNode.parent;
+        let bestPartnerLR = bestPartnerNode.lrchild;
+        let replacementNode = new TreeNode(bestPartnerParentNode);
+
+        if(!bestPartnerParentNode){ //if parent is null, we must be making a new root node
+            this.root = replacementNode;
+        }else{ //otherwise we set parent's left/right child to this new node
+            bestPartnerParentNode.set_child_from_lr(bestPartnerLR, replacementNode);
+        }
+
+        replacementNode.set_lrchild(bestPartnerLR); //also set the lrchild param
+        replacementNode.set_left_right(bestPartnerNode, newNode, true); //and create the new branches
+
+        //rebalance tree and ancestors
+        this.recalculate_tree(replacementNode);
+        // this.rebalance_tree(this.root);
+        // this.update_allNodes();
+    }
+
+    remove(thing){
+
+    }
+
+    search_circle(pos, rad){ //search for things in a circle around a point pos
+        return this.root ? this.root.intersect_circle(pos, rad, []) : [];
+    }
+
+    draw(){
+        // this.things.forEach(t => t.draw());
+
+        if(this.root) this.root.draw();
+    }
+
+    //BAD
     get_best_partner_node(newNode){
         if(this.root.isLeaf){
             return this.root;
@@ -483,52 +624,30 @@ class Tree{
         });
         return bestPartnerNode;
     }
+}
+
+class SimpleArray{
+    constructor(){
+        this.things = [];
+    }
+
+    reset(){
+        this.things = [];
+    }
 
     insert(thing){
         this.things.push(thing);
-        let newNode = new TreeNode(null, thing);
-
-        if(!this.root){ //empty tree, create node
-            this.root = newNode;
-            this.update_allNodes();
-            return true;
-        }
-        
-        //find best partner node
-        // let bestPartnerNode = this.get_best_partner_node(newNode);
-        let bestPartnerNode = this.get_best_partner_node_branchnbound_bfs(newNode);
-        //insert beneath best parent with previous partner node
-        let bestPartnerParentNode = bestPartnerNode.parent;
-        let bestPartnerLR = bestPartnerNode.lrchild;
-        let replacementNode = new TreeNode(bestPartnerParentNode);
-
-        if(!bestPartnerParentNode){ //if parent is null, we must be making a new root node
-            this.root = replacementNode;
-        }else{ //otherwise we set parent's left/right child to this new node
-            bestPartnerParentNode.set_child_from_lr(bestPartnerLR, replacementNode);
-        }
-
-        replacementNode.set_lrchild(bestPartnerLR); //also set the lrchild param
-        replacementNode.set_left_right(bestPartnerNode, newNode, true); //and create the new branches
-
-        //rebalance tree and ancestors
-        this.update_allNodes();
-        this.root.update_depths();
-        replacementNode.update_bounding_boxes();
     }
 
-    remove(thing){
-
+    search_circle(pos, rad){
+        let found = [];
+        this.things.forEach(thing => {
+            FUNCTION_CALLS += 1;
+            if(thing.intersect_circle(pos, rad)){
+                found.push(thing);
+            }
+        });
+        return found;
     }
 
-    search_circle(pos, rad){ //search for things in a circle around a point pos
-        FUNCTION_CALLS = 0;
-        return this.root ? this.root.intersect_circle(pos, rad, []) : [];
-    }
-
-    draw(){
-        this.things.forEach(t => t.draw());
-
-        if(this.root) this.root.draw();
-    }
 }

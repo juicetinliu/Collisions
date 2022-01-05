@@ -34,10 +34,13 @@ function setup() {
     frameRate(60);
     smooth();
     
-    thistree = new Tree();
-    // for(let i = 0; i < 3000; i++){
-    //     thistree.insert(new Circle([random(windowWidth), random(windowHeight)], 0, 0, 10, CollisionType.DYNAMIC))
-    // }
+    // thistree = new Tree();
+    // thistree = new SimpleArray();
+    thistree = new QuadTree(windowWidth/2, windowHeight/2, windowWidth, windowHeight);
+    for(let i = 0; i < 500; i++){
+        console.log("adding");
+        thistree.insert(new Circle([random(windowWidth), random(windowHeight)], 0, 0, 5, CollisionType.DYNAMIC));
+    }
 }
 
 
@@ -62,14 +65,22 @@ function draw() {
     fill(255);
     text(checked_collisions, 20, 60);
     text(colliding_pairs, 20, 80);
+
+    FUNCTION_CALLS = 0;
+    let searchrad = 100;
+    let searchedObjects = thistree.search_circle(createVector(mouseX, mouseY), searchrad);
     text(FUNCTION_CALLS, 20, 100);
 
-    if(toggle) thistree.draw();
-    // let searchedObjects = thistree.search_circle(createVector(mouseX, mouseY), 200);
-    // noFill();
-    // stroke(255,0,0);
-    // ellipse(mouseX, mouseY, 400);
-    // searchedObjects.forEach(o => o.draw_with_bounding_box());
+    noFill();
+    stroke(255,0,0);
+    ellipse(mouseX, mouseY, searchrad * 2);
+    if(toggle){
+        thistree.draw();
+        thistree.things.forEach(t => t.draw());
+    }else{
+        // thistree.draw();
+        searchedObjects.forEach(o => o.draw_with_bounding_box());
+    }
 }
 
 function mouseDragged(){
