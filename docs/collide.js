@@ -113,13 +113,26 @@ class ThingCollider{
     }
 
     circle_line(a, b, intersection){
+        //Assumes lines are always STATIC and circle is DYNAMIC
+        if(a.collisionType === CollisionType.STATIC) return;
+
+
+        // console.log(intersection.x, intersection.y);
+        // console.log(b.posA.x, b.posA.y);
+        // console.log(b.posB.x, b.posB.y);
+
+        if(intersection.equals(b.posA)){
+        }else if(intersection.equals(b.posB)){
+
+        }
+
         let new_pos = intersection.copy().add(a.pos.copy().sub(intersection).setMag(a.rad));
         a.set_pos([new_pos.x, new_pos.y]);
 
         let line_dir = b.posB.copy().sub(b.posA);
         let normal = createVector(-line_dir.y, line_dir.x).normalize();
         let new_vel = a.vel.copy().sub(normal.mult(2 * a.vel.copy().dot(normal)));
-
+        //reflect circle velocity
         a.set_vel([new_vel.x, new_vel.y]);
     }
 }

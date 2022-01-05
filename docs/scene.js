@@ -4,10 +4,16 @@ class Scene{
     constructor(){
         this.pos = createVector(windowWidth/2, windowHeight/2);
         this.dims = createVector(windowWidth, windowHeight);
+
+        this.hasGravity = false;
+        this.gravity = createVector(0, 0.5);
+        this.friction = 0.999;
+        this.simulationSteps = 4;
+
         this.things = [];
         this.collisionPairs = [];
-        // this.collisionGraph = new SimpleArray();
-        this.collisionGraph = new QuadTree(this.pos.x, this.pos.y, this.dims.x, this.dims.y);
+        this.collisionGraph = new Tree();
+        // this.collisionGraph = new QuadTree(this.pos.x, this.pos.y, this.dims.x, this.dims.y);
         this.collider = new ThingCollider();
 
         this.mouseClick = 0;
@@ -16,9 +22,35 @@ class Scene{
         this.selectionVelocity = createVector(0, 0);
     }
 
+    toggle_collision_graph(toggle){
+        switch(toggle){
+            case 0:
+                this.collisionGraph = new Tree();
+                break;
+            case 1:
+                this.collisionGraph = new QuadTree(this.pos.x, this.pos.y, this.dims.x, this.dims.y);
+                break;
+            case 2:
+                this.collisionGraph = new SimpleArray();
+                break;
+            default:
+                this.collisionGraph = new Tree();
+        }
+    }
+
+    toggle_gravity(toggle){
+        this.hasGravity = toggle;
+    }
+
     render(){
-        // this.collisionGraph.draw();
-        this.run();
+        if(toggleDebug){    
+            this.collisionGraph.draw();
+        }
+        this.mouse_interaction();
+        
+        for(let i = 0; i < this.simulationSteps; i++){
+            this.run();
+        }
         // this.things.forEach(thing => thing.highlighted ? thing.draw(128) : thing.draw_with_bounding_box());
         this.things.forEach(thing => thing.highlighted ? thing.draw(128) : thing.draw());
 
@@ -30,12 +62,10 @@ class Scene{
     }
 
     run(){
-        this.mouse_interaction();
-
         this.collisionGraph.reset();
         this.collisionPairs = [];
         this.things.forEach(thing => {        
-            thing.move();
+            thing.move(this.friction, this.hasGravity, this.gravity, this.simulationSteps);
             this.collisionGraph.insert(thing);
         });
         checked_collisions = 0;
@@ -45,7 +75,11 @@ class Scene{
             let search_radius = thing.boundingBox.dims.x * (1 + thing.vel.mag());
             if(thing.vel.mag() === 0) search_radius = thing.boundingBox.dims.x/2 - 1;
             let nearby = this.collisionGraph.search_circle(thing.pos, search_radius);
-
+            
+            // if(toggleDebug){    
+            //     stroke(0,255,255);
+            //     draw_ellipse_vec(thing.pos, search_radius);
+            // }
             // let nearby = this.collisionGraph.search_rect(thing.pos, max(thing.boundingBox) + thing.vel.mag()*2, max(thing.boundingBox) + thing.vel.mag()*2);
             nearby.forEach(othing => {
                 if(thing !== othing){
@@ -66,8 +100,13 @@ class Scene{
         //resolve colliding pairs
         this.collisionPairs.forEach(pair => {
             this.collider.collide(pair.a, pair.b, pair.intersection); 
+            if(toggleDebug){    
+                stroke(0,255,255);
+                draw_line_vec(pair.a.pos, pair.b.pos);
+            }
         })
 
+        //remove things that move out of scene
         for(let t = this.things.length - 1; t >= 0; t--){
             let thing = this.things[t];
             if(!thing.intersect_rect(this.pos, this.dims)){
@@ -217,10 +256,8 @@ class QuadTree{
         let found_things = [];
 
         if(!intersect_circle_rect(pos, rad, this.pos, this.dims)) return found_things;
-        FUNCTION_CALLS += 1;
 
         this.things.forEach(thing => {
-            FUNCTION_CALLS += 1;
             if(thing.intersect_circle(pos, rad)){
                 found_things.push(thing);
             }
@@ -237,7 +274,7 @@ class QuadTree{
     }
 
     draw(){
-        stroke(255);
+        stroke(255,0,0);
         noFill();
         rectMode(CENTER);
         draw_rect_center_vec(this.pos, this.dims);
@@ -353,9 +390,8 @@ class TreeNode{
 
     intersect_circle(pos, rad, found){ //return all things that intersect a circle around a point pos
         if(!this.boundingBox.intersects_circle(pos, rad)) return;
-        FUNCTION_CALLS += 1;
+
         if(this.isLeaf){
-            FUNCTION_CALLS += 1;
             if(this.thing.intersect_circle(pos, rad)){
                 found.push(this.thing);
             }
@@ -376,7 +412,7 @@ class TreeNode{
 }
 
 class Tree{
-    constructor(){ //(x, y) center; (w, h) dimensions
+    constructor(){
         this.things = [];
         this.root = null;
 
@@ -585,45 +621,6 @@ class Tree{
 
         if(this.root) this.root.draw();
     }
-
-    //BAD
-    get_best_partner_node(newNode){
-        if(this.root.isLeaf){
-            return this.root;
-        }
-        
-        let bestPartnerNode = null;
-        let bestScore = MAX_AREA_SCORE;
-            
-        this.allNodes.forEach(node => {
-            let parentNode = node.parent;
-
-            let tempNode = new TreeNode(parentNode); //create temporary node
-            tempNode.set_left_right(node, newNode); //set left and right branches
-            
-            if(parentNode !== null){ //temporarily set parent node's left/right child
-                if(node.lrchild === 0){
-                    parentNode.left = tempNode;
-                }else{
-                    parentNode.right = tempNode;
-                }
-            }
-            
-            let thisArea = tempNode.get_area_heuristic(true); //calculate heuristic starting from temp node towards root (don't calculate root)
-            if(thisArea < bestScore){
-                bestScore = thisArea;
-                bestPartnerNode = node;
-            }
-            if(parentNode !== null){
-                if(node.lrchild === 0){
-                    parentNode.left = node;
-                }else{
-                    parentNode.right = node;
-                }
-            }
-        });
-        return bestPartnerNode;
-    }
 }
 
 class SimpleArray{
@@ -650,4 +647,5 @@ class SimpleArray{
         return found;
     }
 
+    draw(){}
 }

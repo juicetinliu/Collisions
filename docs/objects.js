@@ -1,4 +1,5 @@
 const MIN_VEL_TOLERANCE = 1e-4;
+const SIMULATION_SPEED = 25;
 
 const types_of_things = {
     POINT: "POINT",
@@ -51,11 +52,12 @@ class Thing{
         }
     }
 
-    move(friction = 0.999){
+    move(friction, hasGravity, gravity, simSteps){
         if(this.locked) return;
 
-        this.vel.add(this.acc.copy().mult(deltaTime/15));
-        this.pos.add(this.vel.copy().mult(deltaTime/15));
+        this.vel.add(this.acc.copy().mult(deltaTime/(SIMULATION_SPEED * simSteps)));
+        if(hasGravity) this.vel.add(gravity.copy().mult(deltaTime/(SIMULATION_SPEED * simSteps)));
+        this.pos.add(this.vel.copy().mult(deltaTime/(SIMULATION_SPEED * simSteps)));
 
         this.boundingBox.update_pos(this.pos);
 
