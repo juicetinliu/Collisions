@@ -32,6 +32,8 @@ function setup() {
 
     scene.add_thing(new Line([windowWidth/2+150, windowHeight/2+150], [windowWidth/2-50, windowHeight/2+200]));
     scene.add_thing(new Line([windowWidth/2+50, windowHeight/2+350], [windowWidth/2-250, windowHeight/2+300]));
+    scene.add_thing(new Line([windowWidth/2+50, windowHeight/2+350], [windowWidth/2+250, windowHeight/2+350]));
+
     scene.add_thing(new Line([windowWidth/2-250, windowHeight/2+150], [windowWidth/2-250, windowHeight/2+300]));
 
     // console.log(scene.add_thing(new Line([windowWidth/2+150, windowHeight/2], [windowWidth/2, windowHeight/2+150])));
@@ -49,7 +51,6 @@ function setup() {
     smooth();
 }
 
-
 function draw() {
     background(0);
     fill(255);
@@ -61,17 +62,12 @@ function draw() {
         text("d - Debug", width/2, height-20);
     }
     
+    noFill();
+    stroke(255,128);
+    draw_ellipse_vec(createVector(mouseX, mouseY), 20);
+
     textAlign(LEFT);
-    if(scene.things.length < 15){
-        scene.add_thing(new Circle([windowWidth/2+75, windowHeight/2], 0, 0, random(15,25), CollisionType.DYNAMIC));
-        scene.add_thing(new Circle([windowWidth/2-75, windowHeight/2], 0, 0, random(15,25), CollisionType.DYNAMIC));
-        scene.add_thing(new Circle([windowWidth/2, windowHeight/2+75], 0, 0, random(15,25), CollisionType.DYNAMIC));
-        scene.add_thing(new Circle([windowWidth/2, windowHeight/2-75], 0, 0, random(15,25), CollisionType.DYNAMIC));
-        scene.add_thing(new Circle([windowWidth/2, windowHeight/2], 0, 0, random(15,25), CollisionType.DYNAMIC));
-        // scene.add_thing(new Circle([windowWidth/2, windowHeight*2/3], 0, 0, 5, CollisionType.DYNAMIC));
-        // scene.add_thing(new Circle([random(windowWidth/4), random(windowHeight)], 0, 0, random(1, 50), CollisionType.DYNAMIC));
-        // scene.add_thing(new Circle([random(windowWidth*3/4,windowWidth), random(windowHeight)], 0, 0, random(1, 50), CollisionType.DYNAMIC));
-    }
+    sceneAddObjects();
     scene.render();
     
     fill(255);
@@ -91,6 +87,19 @@ function draw() {
         
         toggleGravity ? fill(0,255,0) : fill(255,0,0);
         text(toggleGravity ? "ON" : "OFF", 80, 120);
+    }
+}
+
+function sceneAddObjects() {
+    if(scene.things.length < 15){
+        scene.add_thing(new Circle([windowWidth/2+75, windowHeight/2], 0, 0, random(15,25), CollisionType.DYNAMIC));
+        scene.add_thing(new Circle([windowWidth/2-75, windowHeight/2], 0, 0, random(15,25), CollisionType.DYNAMIC));
+        scene.add_thing(new Circle([windowWidth/2, windowHeight/2+75], 0, 0, random(15,25), CollisionType.DYNAMIC));
+        scene.add_thing(new Circle([windowWidth/2, windowHeight/2-75], 0, 0, random(15,25), CollisionType.DYNAMIC));
+        scene.add_thing(new Circle([windowWidth/2, windowHeight/2], 0, 0, random(15,25), CollisionType.DYNAMIC));
+        // scene.add_thing(new Circle([windowWidth/2, windowHeight*2/3], 0, 0, 5, CollisionType.DYNAMIC));
+        // scene.add_thing(new Circle([random(windowWidth/4), random(windowHeight)], 0, 0, random(1, 50), CollisionType.DYNAMIC));
+        // scene.add_thing(new Circle([random(windowWidth*3/4,windowWidth), random(windowHeight)], 0, 0, random(1, 50), CollisionType.DYNAMIC));
     }
 }
 

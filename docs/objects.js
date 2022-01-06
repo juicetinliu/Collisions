@@ -225,6 +225,7 @@ class Circle extends Thing{
     draw(f = -1, s = 255, sw = 1){
         this.collisionType === CollisionType.STATIC ? this.fill_stroke(max(f, 100), s, sw) : this.fill_stroke(f, s, sw);
         draw_ellipse_vec(this.pos, this.rad);
+        // draw_line_vec(this.pos, this.pos.copy().add(this.vel.copy().setMag(this.rad)));
     }
 
     get_bounding_box_area(){

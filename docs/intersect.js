@@ -91,17 +91,6 @@ function is_between(a, x, b){
 }
 
 function intersect_circle_line(c_pos, c_rad, l_posa, l_posb, return_point = false){
-    if(intersect_point_circle(l_posa, c_pos, c_rad, false) && intersect_point_circle(l_posb, c_pos, c_rad, false)){
-        if(return_point){
-            if(c_pos.copy().sub(l_posa).magSq() > c_pos.copy().sub(l_posb).magSq()){
-                return l_posb;
-            }else{
-                return l_posa;
-            }
-        }
-        return true;
-    }
-
     let c_la = c_pos.copy().sub(l_posa);
     let b_a = l_posb.copy().sub(l_posa);
 
@@ -119,7 +108,18 @@ function intersect_circle_line(c_pos, c_rad, l_posa, l_posb, return_point = fals
             return false;
         }
     }else{
-        return false;
+        if(intersect_point_circle(l_posa, c_pos, c_rad, false) || intersect_point_circle(l_posb, c_pos, c_rad, false)){
+            if(return_point){
+                if(c_pos.copy().sub(l_posa).magSq() > c_pos.copy().sub(l_posb).magSq()){
+                    return l_posb;
+                }else{
+                    return l_posa;
+                }
+            }
+            return true;
+        }else{
+            return false;
+        }
     }
 }
 
