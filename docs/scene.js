@@ -6,7 +6,7 @@ class Scene{
         this.dims = createVector(windowWidth, windowHeight);
 
         this.hasGravity = false;
-        this.gravity = createVector(0, 0.5);
+        this.gravity = createVector(0, 0.9);
         this.friction = 0.999;
         this.simulationSteps = 4;
 
@@ -68,23 +68,23 @@ class Scene{
             thing.move(this.friction, this.hasGravity, this.gravity, this.simulationSteps);
             this.collisionGraph.insert(thing);
         });
-        checked_collisions = 0;
+        statCheckedCollisions = 0;
 
         //identify colliding pairs
         this.things.forEach(thing => {
-            let search_radius = thing.boundingBox.dims.x * (1 + thing.vel.mag());
+            let search_radius = thing.boundingBox.dims.x + 1;
             if(thing.vel.mag() === 0) search_radius = thing.boundingBox.dims.x/2 - 1;
             let nearby = this.collisionGraph.search_circle(thing.pos, search_radius);
             
-            // if(toggleDebug){    
-            //     stroke(0,255,255);
-            //     draw_ellipse_vec(thing.pos, search_radius);
-            // }
+            if(toggleDebug){    
+                stroke(0,255,255);
+                draw_ellipse_vec(thing.pos, search_radius);
+            }
             // let nearby = this.collisionGraph.search_rect(thing.pos, max(thing.boundingBox) + thing.vel.mag()*2, max(thing.boundingBox) + thing.vel.mag()*2);
             nearby.forEach(othing => {
                 if(thing !== othing){
                     let collides = this.collider.check_collision(othing, thing);
-                    checked_collisions ++;
+                    statCheckedCollisions ++;
                     
                     if(collides){
                         let newPair = new CollidedThingPair(othing, thing, collides);
@@ -95,7 +95,7 @@ class Scene{
                 }
             });
         });
-        colliding_pairs = this.collisionPairs.length;
+        statCollidingPairs = this.collisionPairs.length;
 
         //resolve colliding pairs
         this.collisionPairs.forEach(pair => {
@@ -390,7 +390,6 @@ class TreeNode{
 
     intersect_circle(pos, rad, found){ //return all things that intersect a circle around a point pos
         if(!this.boundingBox.intersects_circle(pos, rad)) return;
-
         if(this.isLeaf){
             if(this.thing.intersect_circle(pos, rad)){
                 found.push(this.thing);
@@ -639,7 +638,6 @@ class SimpleArray{
     search_circle(pos, rad){
         let found = [];
         this.things.forEach(thing => {
-            FUNCTION_CALLS += 1;
             if(thing.intersect_circle(pos, rad)){
                 found.push(thing);
             }

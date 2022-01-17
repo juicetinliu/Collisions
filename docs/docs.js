@@ -1,58 +1,60 @@
 let scene;
-let checked_collisions = 0;
-let colliding_pairs = 0;
+let statCheckedCollisions = 0;
+let statCollidingPairs = 0;
 
-let FUNCTION_CALLS = 0;
 let toggleDebug = false;
 let toggleGravity = false;
 let toggleCollisionGraph = 0;
+let togglePause = false;
 
 function setup() {
     renderer = createCanvas(windowWidth, windowHeight);
     scene = new Scene();
     
     // scene.add_thing(new Circle([windowWidth/4, windowHeight/2], [0, 0], 0, 50, CollisionType.STATIC));
-    // console.log(scene.add_thing(new Line([0,0], [windowWidth,0])));
-    // console.log(scene.add_thing(new Line([windowWidth,0], [windowWidth,windowHeight])));
-    // console.log(scene.add_thing(new Line([windowWidth,windowHeight], [0,windowHeight])));
-    // console.log(scene.add_thing(new Line([0,windowHeight], [0,0])));
+    // scene.add_thing(new Line([0,0], [windowWidth,0]));
+    // scene.add_thing(new Line([windowWidth,0], [windowWidth,windowHeight]));
+    // scene.add_thing(new Line([windowWidth,windowHeight], [0,windowHeight]));
+    // scene.add_thing(new Line([0,windowHeight], [0,0]));
     
-    // console.log(scene.add_thing(new Line([200,0], [0,200])));
+    // scene.add_thing(new Line([200,0], [0,200]));
 
-    // console.log(scene.add_thing(new Line([600,0], [800,200])));
-    // console.log(scene.add_thing(new Line([600,800], [800,600])));
-    // // console.log(scene.add_thing(new Line([200,800], [0,600])));
+    // scene.add_thing(new Line([600,0], [800,200]));
+    // scene.add_thing(new Line([600,800], [800,600]));
+    // // scene.add_thing(new Line([200,800], [0,600]));
 
-    // console.log(scene.add_thing(new Line([200,0], [0,200])));
+    // scene.add_thing(new Line([200,0], [0,200]));
 
-    // console.log(scene.add_thing(new Line([200,400], [0,200])));
+    // scene.add_thing(new Line([200,400], [0,200]));
 
-    // console.log(scene.add_thing(new Line([400,200], [200,400])));
-    // console.log(scene.add_thing(new Line([400,200], [200,0])));
+    // scene.add_thing(new Line([400,200], [200,400]));
+    // scene.add_thing(new Line([400,200], [200,0]));
 
     scene.add_thing(new Line([windowWidth/2+150, windowHeight/2+150], [windowWidth/2-50, windowHeight/2+200]));
-    scene.add_thing(new Line([windowWidth/2+50, windowHeight/2+350], [windowWidth/2-250, windowHeight/2+300]));
-    scene.add_thing(new Line([windowWidth/2+50, windowHeight/2+350], [windowWidth/2+250, windowHeight/2+350]));
+    // scene.add_thing(new Line([windowWidth/2+50, windowHeight/2+350], [windowWidth/2-250, windowHeight/2+300]));
+    // scene.add_thing(new Line([windowWidth/2+50, windowHeight/2+350], [windowWidth/2+250, windowHeight/2+350]));
 
-    scene.add_thing(new Line([windowWidth/2-250, windowHeight/2+150], [windowWidth/2-250, windowHeight/2+300]));
+    // scene.add_thing(new Line([windowWidth/2-250, windowHeight/2+150], [windowWidth/2-250, windowHeight/2+300]));
 
-    // console.log(scene.add_thing(new Line([windowWidth/2+150, windowHeight/2], [windowWidth/2, windowHeight/2+150])));
-    // console.log(scene.add_thing(new Line([windowWidth/2-150, windowHeight/2], [windowWidth/2, windowHeight/2+150])));
-    // console.log(scene.add_thing(new Line([windowWidth/2, windowHeight/2-150], [windowWidth/2+150, windowHeight/2])));
-    // console.log(scene.add_thing(new Line([windowWidth/2, windowHeight/2-150], [windowWidth/2-150, windowHeight/2])));
+    // scene.add_thing(new Line([windowWidth/2+150, windowHeight/2], [windowWidth/2, windowHeight/2+150]));
+    // scene.add_thing(new Line([windowWidth/2-150, windowHeight/2], [windowWidth/2, windowHeight/2+150]));
+    // scene.add_thing(new Line([windowWidth/2, windowHeight/2-150], [windowWidth/2+150, windowHeight/2]));
+    // scene.add_thing(new Line([windowWidth/2, windowHeight/2-150], [windowWidth/2-150, windowHeight/2]));
     
 
-    // console.log(scene.add_thing(new Line([windowWidth/2+250, windowHeight/2], [windowWidth/2, windowHeight/2+250])));
-    // console.log(scene.add_thing(new Line([windowWidth/2-250, windowHeight/2], [windowWidth/2, windowHeight/2+250])));
-    // console.log(scene.add_thing(new Line([windowWidth/2, windowHeight/2-250], [windowWidth/2+250, windowHeight/2])));
-    // console.log(scene.add_thing(new Line([windowWidth/2, windowHeight/2-250], [windowWidth/2-250, windowHeight/2])));
+    scene.add_thing(new Line([windowWidth/2+250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
+    
+    scene.add_thing(new Line([windowWidth/2-250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
+    scene.add_thing(new Line([windowWidth/2, windowHeight/2-250], [windowWidth/2+250, windowHeight/2]));
+    scene.add_thing(new Line([windowWidth/2, windowHeight/2-250], [windowWidth/2-250, windowHeight/2]));
 
     frameRate(60);
     smooth();
 }
+//https://www.youtube.com/watch?v=ebq7L2Wtbl4&ab_channel=javidx9
 
 function draw() {
-    background(0);
+    background(0,50);
     fill(255);
     text(frameRate().toFixed(1), 20, 20);
     textAlign(CENTER);
@@ -67,7 +69,7 @@ function draw() {
     draw_ellipse_vec(createVector(mouseX, mouseY), 20);
 
     textAlign(LEFT);
-    sceneAddObjects();
+    // sceneAddObjects();
     scene.render();
     
     fill(255);
@@ -80,8 +82,8 @@ function draw() {
         text("Gravity", 20, 120);
 
         text(scene.things.length, 80, 40);
-        text(checked_collisions, 80, 60);
-        text(colliding_pairs, 80, 80);
+        text(statCheckedCollisions, 80, 60);
+        text(statCollidingPairs, 80, 80);
         
         text(["DVBT", "Quadtree", "Array"][toggleCollisionGraph], 80, 100);
         
@@ -111,14 +113,16 @@ function mousePressed(){
 
 function keyPressed(){
     console.log(keyCode);
-    if(keyCode === 68){
+    if(keyCode === 68){ //d
         toggleDebug = !toggleDebug;
-    }else if(keyCode === 83){
+    }else if(keyCode === 83){ //s
         toggleCollisionGraph = (toggleCollisionGraph + 1) % 3;
         scene.toggle_collision_graph(toggleCollisionGraph);
-    }else if(keyCode === 71){
+    }else if(keyCode === 71){ //g
         toggleGravity = !toggleGravity;
         scene.toggle_gravity(toggleGravity);
+    }else if (keyCode === 32){ //space
+        togglePause = !togglePause;
     }
 
 }
