@@ -46,69 +46,69 @@ class ThingCollider{
         // line(a.pos.x, a.pos.y, b.pos.x, b.pos.y);
         
         // STATICS
-        let a_static = (a.collisionType === CollisionType.STATIC);
-        let b_static = (b.collisionType === CollisionType.STATIC);
+        let aStatic = (a.collisionType === CollisionType.STATIC);
+        let bStatic = (b.collisionType === CollisionType.STATIC);
         
-        if(a_static && b_static) return; //both static -> don't collide
+        if(aStatic && bStatic) return; //both static -> don't collide
         
-        let pre_pos_diff = a.pos.copy().sub(b.pos);
+        let prePosDiff = a.pos.copy().sub(b.pos);
         
-        if(!(a_static || b_static)){ //neither are static
-            if(pre_pos_diff.magSq() < 1e-6){ //add random noise if objects spawn exactly on each other
-                let new_shift_pos = b.pos.copy().add(p5.Vector.random2D().setMag(1e-3));
-                b.set_pos([new_shift_pos.x, new_shift_pos.y]);
+        if(!(aStatic || bStatic)){ //neither are static
+            if(prePosDiff.magSq() < 1e-6){ //add random noise if objects spawn exactly on each other
+                let newShiftPos = b.pos.copy().add(p5.Vector.random2D().setMag(1e-3));
+                b.set_pos([newShiftPos.x, newShiftPos.y]);
                 console.log("shifting");
             }
-        }else if(a_static){
-            if(pre_pos_diff.magSq() < 1e-6){
-                let new_shift_pos = b.pos.copy().add(p5.Vector.random2D().setMag(1e-3));
-                b.set_pos([new_shift_pos.x, new_shift_pos.y]);
+        }else if(aStatic){
+            if(prePosDiff.magSq() < 1e-6){
+                let newShiftPos = b.pos.copy().add(p5.Vector.random2D().setMag(1e-3));
+                b.set_pos([newShiftPos.x, newShiftPos.y]);
                 console.log("shifting");
             }
-        }else if(b_static){
-            if(pre_pos_diff.magSq() < 1e-6){
-                let new_shift_pos = a.pos.copy().add(p5.Vector.random2D().setMag(1e-3));
-                a.set_pos([new_shift_pos.x, new_shift_pos.y]);
+        }else if(bStatic){
+            if(prePosDiff.magSq() < 1e-6){
+                let newShiftPos = a.pos.copy().add(p5.Vector.random2D().setMag(1e-3));
+                a.set_pos([newShiftPos.x, newShiftPos.y]);
                 console.log("shifting");
             }
         }
-        pre_pos_diff = a.pos.copy().sub(b.pos);
-        let overlap = pre_pos_diff.setMag(pre_pos_diff.mag() - a.rad - b.rad);
+        prePosDiff = a.pos.copy().sub(b.pos);
+        let overlap = prePosDiff.setMag(prePosDiff.mag() - a.rad - b.rad);
 
-        if(!(a_static || b_static)){
+        if(!(aStatic || bStatic)){
             overlap.mult(0.5);
         }
 
-        if(!a_static){
-            let a_new_pos = a.pos.copy().sub(overlap);
-            a.set_pos([a_new_pos.x, a_new_pos.y]);
+        if(!aStatic){
+            let aNewPos = a.pos.copy().sub(overlap);
+            a.set_pos([aNewPos.x, aNewPos.y]);
         }
-        if(!b_static){
-            let b_new_pos = b.pos.copy().add(overlap);
-            b.set_pos([b_new_pos.x, b_new_pos.y]);            
+        if(!bStatic){
+            let bNewPos = b.pos.copy().add(overlap);
+            b.set_pos([bNewPos.x, bNewPos.y]);            
         }
 
         //momentum and velocity calculations
-        let mass_total = a.mass + b.mass;
-        let mass_diff = a.mass - b.mass;
+        let massTotal = a.mass + b.mass;
+        let massDiff = a.mass - b.mass;
 
         let normal = b.pos.copy().sub(a.pos).normalize();
         let tangent = createVector(-normal.y, normal.x);
         
-        let a_dot_normal = a.vel.copy().dot(normal);
-        let b_dot_normal = b.vel.copy().dot(normal);
+        let aDotNormal = a.vel.copy().dot(normal);
+        let bDotNormal = b.vel.copy().dot(normal);
 
-        let a_momentum = (a_dot_normal * mass_diff + 2 * b.mass * b_dot_normal) / (mass_total);
-        let b_momentum = (b_dot_normal * -mass_diff + 2 * a.mass * a_dot_normal) / (mass_total);
+        let aMomentum = (aDotNormal * massDiff + 2 * b.mass * bDotNormal) / (massTotal);
+        let bMomentum = (bDotNormal * -massDiff + 2 * a.mass * aDotNormal) / (massTotal);
         
-        let a_new_vel = tangent.copy().mult(a.vel.dot(tangent)).add(normal.copy().mult(a_momentum));
-        let b_new_vel = tangent.copy().mult(b.vel.dot(tangent)).add(normal.copy().mult(b_momentum));
+        let aNewVel = tangent.copy().mult(a.vel.dot(tangent)).add(normal.copy().mult(aMomentum));
+        let bNewVel = tangent.copy().mult(b.vel.dot(tangent)).add(normal.copy().mult(bMomentum));
 
-        if(!a_static){
-            a.set_vel([a_new_vel.x, a_new_vel.y]);
+        if(!aStatic){
+            a.set_vel([aNewVel.x, aNewVel.y]);
         }
-        if(!b_static){
-            b.set_vel([b_new_vel.x, b_new_vel.y]);
+        if(!bStatic){
+            b.set_vel([bNewVel.x, bNewVel.y]);
         }
     }
 
@@ -116,10 +116,16 @@ class ThingCollider{
         let new_pos = intersection.copy().add(a.pos.copy().sub(intersection).setMag(a.rad));
         a.set_pos([new_pos.x, new_pos.y]);
 
-        let line_dir = b.posB.copy().sub(b.posA);
-        let normal = createVector(-line_dir.y, line_dir.x).normalize();
-        let new_vel = a.vel.copy().sub(normal.mult(2 * a.vel.copy().dot(normal)));
+        let normal = a.pos.copy().sub(intersection.copy()).normalize();
+        let new_vel = a.vel.copy().sub(normal.copy().mult(2 * a.vel.copy().dot(normal)));
+        
+        //BUG: MULTIPLE REFLECTIONS CAN OCCUR BETWEEN A CIRCLE AND TWO LINES 
+        // stroke(255);
+        // draw_line_vec(intersection, intersection.copy().add(normal.copy().setMag(50)));
 
+        // draw_line_vec(a.pos, new_vel.copy().setMag(100).add(a.pos));
+        
+        //reflect circle velocity
         a.set_vel([new_vel.x, new_vel.y]);
     }
 }

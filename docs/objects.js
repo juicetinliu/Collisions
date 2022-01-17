@@ -223,6 +223,7 @@ class Circle extends Thing{
     draw(f = -1, s = 255, sw = 1){
         this.collisionType === CollisionType.STATIC ? this.fill_stroke(max(f, 100), s, sw) : this.fill_stroke(f, s, sw);
         draw_ellipse_vec(this.pos, this.rad);
+        draw_line_vec(this.pos, this.pos.copy().add(this.vel.copy().mult(10)));
     }
 
     get_bounding_box_area(){
@@ -308,8 +309,8 @@ function abs_vec(vector){
     return createVector(abs(vector.x), abs(vector.y));
 }
 
-function draw_line_vec(point_a, point_b){
-    line(point_a.x, point_a.y, point_b.x, point_b.y);
+function draw_line_vec(pointA, pointB){
+    line(pointA.x, pointA.y, pointB.x, pointB.y);
 }
 
 function draw_ellipse_vec(center, radius){
@@ -321,12 +322,12 @@ function draw_rect_center_vec(center, dims){
     rect(center.x, center.y, dims.x, dims.y);
 }
 
-function draw_rect_corner_vec(corner_tl, dims){
+function draw_rect_corner_vec(cornerTl, dims){
     rectMode(CORNER);
-    rect(corner_tl.x, corner_tl.y, dims.x, dims.y);
+    rect(cornerTl.x, cornerTl.y, dims.x, dims.y);
 }
 
-function draw_rect_corners_vec(corner_tl, corner_br){
+function draw_rect_corners_vec(cornerTl, cornerBr){
     rectMode(CORNERS);
-    rect(corner_tl.x, corner_tl.y, corner_br.x, corner_br.y);
+    rect(cornerTl.x, cornerTl.y, cornerBr.x, cornerBr.y);
 }
