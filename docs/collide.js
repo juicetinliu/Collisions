@@ -98,8 +98,19 @@ class ThingCollider{
         let aDotNormal = a.vel.copy().dot(normal);
         let bDotNormal = b.vel.copy().dot(normal);
 
-        let aMomentum = (aDotNormal * massDiff + 2 * b.mass * bDotNormal) / (massTotal);
-        let bMomentum = (bDotNormal * -massDiff + 2 * a.mass * aDotNormal) / (massTotal);
+        let aMomentum;
+        let bMomentum;
+
+        if(!(aStatic || bStatic)){ //Neither are static
+            aMomentum = (aDotNormal * massDiff + 2 * b.mass * bDotNormal) / (massTotal);
+            bMomentum = (bDotNormal * -massDiff + 2 * a.mass * aDotNormal) / (massTotal);
+        }else if(aStatic){ //Treat a.mass as infinite: massTotal = a.mass, massDiff = a.mass, cancel terms
+            aMomentum = aDotNormal;
+            bMomentum = -bDotNormal + 2 * aDotNormal;
+        }else if(bStatic){ //Treat b.mass as infinite: massTotal = b.mass, massDiff = -b.mass, cancel terms
+            aMomentum = -aDotNormal + 2 * bDotNormal;
+            bMomentum = bDotNormal;
+        }
         
         let aNewVel = tangent.copy().mult(a.vel.dot(tangent)).add(normal.copy().mult(aMomentum));
         let bNewVel = tangent.copy().mult(b.vel.dot(tangent)).add(normal.copy().mult(bMomentum));
@@ -113,7 +124,8 @@ class ThingCollider{
     }
 
     circle_line(a, b, intersection){
-        //Assumes lines are always STATIC
+        //Intersection point between circle and line is closest point on line OR line endpoints (if circle resides on endpoints)
+        //Assumes lines are always STATIC for now
 
         //If circle is static then don't collide
         if(a.collisionType === CollisionType.STATIC) return;
@@ -127,15 +139,15 @@ class ThingCollider{
 
         let new_pos = intersection.copy().add(a.pos.copy().sub(intersection).setMag(a.rad));
         a.set_pos([new_pos.x, new_pos.y]);
-
+        
         let normal = a.pos.copy().sub(intersection.copy()).normalize();
         let new_vel = a.vel.copy().sub(normal.copy().mult(2 * a.vel.copy().dot(normal)));
         
         //BUG: MULTIPLE REFLECTIONS CAN OCCUR BETWEEN A CIRCLE AND TWO LINES 
-        // stroke(255);
-        // draw_line_vec(intersection, intersection.copy().add(normal.copy().setMag(50)));
+        stroke(255);
+        draw_line_vec(intersection, intersection.copy().add(normal.copy().setMag(50)));
 
-        // draw_line_vec(a.pos, new_vel.copy().setMag(100).add(a.pos));
+        draw_line_vec(a.pos, new_vel.copy().setMag(100).add(a.pos));
         
         //reflect circle velocity
         a.set_vel([new_vel.x, new_vel.y]);

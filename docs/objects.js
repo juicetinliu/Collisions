@@ -10,7 +10,7 @@ const types_of_things = {
 
 const collision_properties = {
     NONE: "NONE", //won't collide at all
-    STATIC: "STATIC", //will react to collisions like a wall (won't react itself)
+    STATIC: "STATIC", //will react to collisions like a wall (won't react itself) - (STATIC doesn't collide with STATIC)
     DYNAMIC: "DYNAMIC", //will react to collisions like a ball (will react itself)
 }
 
@@ -25,6 +25,7 @@ class Thing{
         this.mass = mass;
         this.thingType = thingType;
         this.collisionType = collisionType;
+        this.tmpCollisionType = collisionType;
         this.boundingBox = null;
 
         this.highlighted = false;
@@ -71,10 +72,12 @@ class Thing{
 
     lock(){
         this.locked = true;
+        this.collisionType = CollisionType.STATIC;
     }
 
     unlock(){
         this.locked = false;
+        this.collisionType = this.tmpCollisionType;
     }
 
     set_pos(newpos){

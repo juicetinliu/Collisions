@@ -52,7 +52,7 @@ class Scene{
             this.run();
         }
         // this.things.forEach(thing => thing.highlighted ? thing.draw(128) : thing.draw_with_bounding_box());
-        this.things.forEach(thing => thing.highlighted ? thing.draw(128) : thing.draw());
+        this.things.forEach(thing => thing.highlighted ? thing.draw(128) : thing.draw_with_bounding_box());
 
     }
 
@@ -72,7 +72,7 @@ class Scene{
 
         //identify colliding pairs
         this.things.forEach(thing => {
-            let search_radius = thing.boundingBox.dims.x + 1;
+            let search_radius = thing.boundingBox.dims.x + 1;  //TODO: Make lines search radius match line length
             if(thing.vel.mag() === 0) search_radius = thing.boundingBox.dims.x/2 - 1;
             let nearby = this.collisionGraph.search_circle(thing.pos, search_radius);
             

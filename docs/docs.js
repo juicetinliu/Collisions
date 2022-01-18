@@ -4,13 +4,13 @@ let statCollidingPairs = 0;
 
 let toggleDebug = false;
 let toggleGravity = false;
-let toggleCollisionGraph = 0;
+let toggleCollisionGraph = 1;
 let togglePause = false;
 
 function setup() {
     renderer = createCanvas(windowWidth, windowHeight);
     scene = new Scene();
-    
+    scene.toggle_collision_graph(toggleCollisionGraph);
     // scene.add_thing(new Circle([windowWidth/4, windowHeight/2], [0, 0], 0, 50, CollisionType.STATIC));
     // scene.add_thing(new Line([0,0], [windowWidth,0]));
     // scene.add_thing(new Line([windowWidth,0], [windowWidth,windowHeight]));
