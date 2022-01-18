@@ -30,9 +30,20 @@ class Thing{
 
         this.highlighted = false;
         this.locked = false;
+
+        this.sceneIndex = 0;
     }
 
-    draw(){}
+    set_scene_index(index){
+        this.sceneIndex = index;
+    }
+
+    draw(){
+        if(toggleDebug){
+            fill(255);
+            text(this.sceneIndex, this.pos.x, this.pos.y);
+        }
+    }
 
     draw_with_bounding_box(){
         this.draw();
@@ -141,6 +152,10 @@ class Thing{
     unhighlight(){
         this.highlighted = false;
     }
+
+    equals(o){
+        return this === o;
+    };
 }
 
 class Point extends Thing{
@@ -148,7 +163,8 @@ class Point extends Thing{
         super(pos, vel, acc, mass, ThingType.POINT, collisionType);
     }
 
-    draw(s = 255, sw = 1){
+    draw(f = 255, s = f, sw = 1){
+        super.draw();
         this.fill_stroke(-1, s, sw);
         let p = this.pos;
         point(p.x, p.y);
@@ -189,7 +205,8 @@ class Line extends Thing{
 
     move(){}
 
-    draw(s = 255, sw = 1){
+    draw(f = 255, s = f, sw = 1){
+        super.draw();
         this.fill_stroke(-1, s, sw);
         draw_line_vec(this.posA, this.posB);
     }
@@ -226,6 +243,7 @@ class Circle extends Thing{
     }
 
     draw(f = -1, s = 255, sw = 1){
+        super.draw();
         this.collisionType === CollisionType.STATIC ? this.fill_stroke(max(f, 100), s, sw) : this.fill_stroke(f, s, sw);
         draw_ellipse_vec(this.pos, this.rad);
         draw_line_vec(this.pos, this.pos.copy().add(this.vel.copy().mult(10)));
@@ -267,6 +285,7 @@ class Rect extends Thing{
     }
 
     draw(f = -1, s = 255, sw = 1){
+        super.draw();
         this.fill_stroke(f, s, sw);
         let p = this.pos;
         draw_rect_center_vec(this.pos, this.dims);

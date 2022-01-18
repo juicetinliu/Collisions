@@ -6,6 +6,7 @@ let toggleDebug = false;
 let toggleGravity = false;
 let toggleCollisionGraph = 1;
 let togglePause = false;
+let toggleHighlightCollidingGroups = false;
 
 function setup() {
     renderer = createCanvas(windowWidth, windowHeight);
@@ -30,23 +31,38 @@ function setup() {
     // scene.add_thing(new Line([400,200], [200,400]));
     // scene.add_thing(new Line([400,200], [200,0]));
 
-    scene.add_thing(new Line([windowWidth/2+150, windowHeight/2+150], [windowWidth/2-50, windowHeight/2+200]));
+    scene.add_thing(new Line([windowWidth/2+150, windowHeight/2+150], [windowWidth/2-150, windowHeight/2+200]));
     // scene.add_thing(new Line([windowWidth/2+50, windowHeight/2+350], [windowWidth/2-250, windowHeight/2+300]));
     // scene.add_thing(new Line([windowWidth/2+50, windowHeight/2+350], [windowWidth/2+250, windowHeight/2+350]));
 
     // scene.add_thing(new Line([windowWidth/2-250, windowHeight/2+150], [windowWidth/2-250, windowHeight/2+300]));
+    // scene.add_thing(new Circle([windowWidth/2, windowHeight/2], 0, 0, 25, CollisionType.STATIC));
+    // scene.add_thing(new Circle([windowWidth/2, windowHeight/2], 0, 0, 25, CollisionType.STATIC));
 
     // scene.add_thing(new Line([windowWidth/2+150, windowHeight/2], [windowWidth/2, windowHeight/2+150]));
     // scene.add_thing(new Line([windowWidth/2-150, windowHeight/2], [windowWidth/2, windowHeight/2+150]));
     // scene.add_thing(new Line([windowWidth/2, windowHeight/2-150], [windowWidth/2+150, windowHeight/2]));
     // scene.add_thing(new Line([windowWidth/2, windowHeight/2-150], [windowWidth/2-150, windowHeight/2]));
-    
 
     scene.add_thing(new Line([windowWidth/2+250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
     
     scene.add_thing(new Line([windowWidth/2-250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
     scene.add_thing(new Line([windowWidth/2, windowHeight/2-250], [windowWidth/2+250, windowHeight/2]));
     scene.add_thing(new Line([windowWidth/2, windowHeight/2-250], [windowWidth/2-250, windowHeight/2]));
+
+
+    // TEST CASES
+    // scene.add_thing(new Circle([windowWidth/2-100, windowHeight/2-400], [1, 0], 0, 25, CollisionType.DYNAMIC));
+    // scene.add_thing(new Circle([windowWidth/2, windowHeight/2-400], 0, 0, 25, CollisionType.DYNAMIC));
+    // scene.add_thing(new Circle([windowWidth/2+50, windowHeight/2-400], 0, 0, 25, CollisionType.DYNAMIC));
+
+    // scene.add_thing(new Circle([windowWidth/2-100, windowHeight/2], [1, 0], 0, 25, CollisionType.DYNAMIC));
+    // scene.add_thing(new Circle([windowWidth/2, windowHeight/2-20], 0, 0, 25, CollisionType.DYNAMIC));
+    // scene.add_thing(new Circle([windowWidth/2, windowHeight/2+20], 0, 0, 25, CollisionType.DYNAMIC));
+
+    // scene.add_thing(new Circle([windowWidth/2-100, windowHeight/2+400], [1, 0], 0, 25, CollisionType.DYNAMIC));
+    // scene.add_thing(new Circle([windowWidth/2, windowHeight/2+400], 0, 0, 25, CollisionType.DYNAMIC));
+    // scene.add_thing(new Circle([windowWidth/2+150, windowHeight/2+400], [-2, 0], 0, 25, CollisionType.DYNAMIC));
 
     frameRate(60);
     smooth();
@@ -59,7 +75,7 @@ function draw() {
     text(frameRate().toFixed(1), 20, 20);
     textAlign(CENTER);
     if(toggleDebug){    
-        text("d - Debug | s - Scene Graph Type | g - Toggle Gravity", width/2, height-20);
+        text("d - Debug | s - Scene Graph Type | g - Toggle Gravity | x - Show Collision Groups", width/2, height-20);
     }else{
         text("d - Debug", width/2, height-20);
     }
@@ -121,6 +137,8 @@ function keyPressed(){
     }else if(keyCode === 71){ //g
         toggleGravity = !toggleGravity;
         scene.toggle_gravity(toggleGravity);
+    }else if (keyCode === 88){
+        toggleHighlightCollidingGroups = !toggleHighlightCollidingGroups;
     }else if (keyCode === 32){ //space
         togglePause = !togglePause;
     }

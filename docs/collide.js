@@ -123,12 +123,12 @@ class ThingCollider{
         }
     }
 
-    circle_line(a, b, intersection){
+    circle_line(circle, b, intersection){
         //Intersection point between circle and line is closest point on line OR line endpoints (if circle resides on endpoints)
         //Assumes lines are always STATIC for now
 
         //If circle is static then don't collide
-        if(a.collisionType === CollisionType.STATIC) return;
+        if(circle.collisionType === CollisionType.STATIC) return;
 
         // fill(255,0,0);
         // draw_ellipse_vec(intersection, 5)
@@ -137,19 +137,61 @@ class ThingCollider{
         // console.log(b.posA.x, b.posA.y);
         // console.log(b.posB.x, b.posB.y);
 
-        let new_pos = intersection.copy().add(a.pos.copy().sub(intersection).setMag(a.rad));
-        a.set_pos([new_pos.x, new_pos.y]);
+        let newPos = intersection.copy().add(circle.pos.copy().sub(intersection).setMag(circle.rad));
+        circle.set_pos([newPos.x, newPos.y]);
         
-        let normal = a.pos.copy().sub(intersection.copy()).normalize();
-        let new_vel = a.vel.copy().sub(normal.copy().mult(2 * a.vel.copy().dot(normal)));
+        let normal = circle.pos.copy().sub(intersection.copy()).normalize();
+        let newVel = circle.vel.copy().sub(normal.copy().mult(2 * circle.vel.copy().dot(normal)));
         
-        //BUG: MULTIPLE REFLECTIONS CAN OCCUR BETWEEN A CIRCLE AND TWO LINES 
-        stroke(255);
-        draw_line_vec(intersection, intersection.copy().add(normal.copy().setMag(50)));
+        //BUG_1: MULTIPLE REFLECTIONS CAN OCCUR BETWEEN A CIRCLE AND TWO LINES 
+        // stroke(255);
+        // draw_line_vec(intersection, intersection.copy().add(normal.copy().setMag(50)));
 
-        draw_line_vec(a.pos, new_vel.copy().setMag(100).add(a.pos));
+        // draw_line_vec(circle.pos, newVel.copy().setMag(100).add(circle.pos));
         
         //reflect circle velocity
-        a.set_vel([new_vel.x, new_vel.y]);
+        circle.set_vel([newVel.x, newVel.y]);
+    }
+
+    collide_group(group = new CollidedThingGroup()){
+        //Currently only contains groups with thing = circle and otherthings = lines;
+        
+        let circle = group.thing; //circle
+        if(circle.collisionType === CollisionType.STATIC) return false;
+        
+        let intersections = object_list_remove_duplicates(group.intersections);
+
+        let avgIntersections = intersections.reduce((a, b) => a.copy().add(b), to_2d_vector(0)).div(intersections.length);
+        // let newPos = avgIntersections.copy().add(circle.pos.copy().sub(avgIntersections).setMag(circle.rad));
+
+        let pushBacks = intersections.map(i => i.copy().add(circle.pos.copy().sub(i).setMag(circle.rad)));
+        let newPos = pushBacks.reduce((a, b) => a.copy().add(b)).div(intersections.length);
+
+        circle.set_pos([newPos.x, newPos.y]);
+        
+        // pushBacks.forEach(p => {
+            // fill(0,255,255);
+            // draw_ellipse_vec(avgIntersections, 10);
+        // });
+        
+
+        // if(circle.vel.magSq() > 0){
+        //     let usefulIntersections = intersections.filter(i => {
+        //         return i.copy().dot((circle.vel)) !== 0;
+        //     });
+        //     avgIntersections = usefulIntersections.reduce((a, b) => a.copy().add(b), to_2d_vector(0)).div(usefulIntersections.length);
+        // }
+        
+        let normal = circle.pos.copy().sub(avgIntersections.copy()).normalize();
+        let newVel = circle.vel.copy().sub(normal.copy().mult(2 * circle.vel.copy().dot(normal)));
+        
+        //reflect circle velocity
+        circle.set_vel([newVel.x, newVel.y]);
+
+        return true;
+    }
+
+    circle_line_group(circle, lineGroup){
+
     }
 }
