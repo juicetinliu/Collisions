@@ -37,6 +37,10 @@ class AABB{
         return this.dims.x * this.dims.y;
     }
 
+    max_dims(){
+        return max(this.dims.x, this.dims.y);
+    }
+
     draw(){
         stroke(255, 0, 0);
         noFill();

@@ -130,24 +130,11 @@ class ThingCollider{
         //If circle is static then don't collide
         if(circle.collisionType === CollisionType.STATIC) return;
 
-        // fill(255,0,0);
-        // draw_ellipse_vec(intersection, 5)
-
-        // console.log(intersection.x, intersection.y);
-        // console.log(b.posA.x, b.posA.y);
-        // console.log(b.posB.x, b.posB.y);
-
         let newPos = intersection.copy().add(circle.pos.copy().sub(intersection).setMag(circle.rad));
         circle.set_pos([newPos.x, newPos.y]);
         
         let normal = circle.pos.copy().sub(intersection.copy()).normalize();
         let newVel = circle.vel.copy().sub(normal.copy().mult(2 * circle.vel.copy().dot(normal)));
-        
-        //BUG_1: MULTIPLE REFLECTIONS CAN OCCUR BETWEEN A CIRCLE AND TWO LINES 
-        // stroke(255);
-        // draw_line_vec(intersection, intersection.copy().add(normal.copy().setMag(50)));
-
-        // draw_line_vec(circle.pos, newVel.copy().setMag(100).add(circle.pos));
         
         //reflect circle velocity
         circle.set_vel([newVel.x, newVel.y]);
@@ -161,32 +148,39 @@ class ThingCollider{
         
         let intersections = object_list_remove_duplicates(group.intersections);
 
-        let avgIntersections = intersections.reduce((a, b) => a.copy().add(b), to_2d_vector(0)).div(intersections.length);
-        // let newPos = avgIntersections.copy().add(circle.pos.copy().sub(avgIntersections).setMag(circle.rad));
 
-        let pushBacks = intersections.map(i => i.copy().add(circle.pos.copy().sub(i).setMag(circle.rad)));
-        let newPos = pushBacks.reduce((a, b) => a.copy().add(b)).div(intersections.length);
+        //PROBLEM HERE SEE DIAGRAM
+        //Ignore intersection points that have normals which are perpendicular to direction of travel (since there'd be no effect on the velocity)
+        if(circle.vel.magSq() > MIN_VEL_TOLERANCE && intersections.length === 2){
+            intersections = intersections.filter(i => {
+                let iNormal = circle.pos.copy().sub(i.copy()).normalize();
+                return abs(iNormal.copy().dot(circle.vel.copy().normalize())) > 1e-1;
+            });
+        }
 
-        circle.set_pos([newPos.x, newPos.y]);
-        
-        // pushBacks.forEach(p => {
-            // fill(0,255,255);
-            // draw_ellipse_vec(avgIntersections, 10);
-        // });
-        
+        // console.log(intersections)
 
-        // if(circle.vel.magSq() > 0){
-        //     let usefulIntersections = intersections.filter(i => {
-        //         return i.copy().dot((circle.vel)) !== 0;
-        //     });
-        //     avgIntersections = usefulIntersections.reduce((a, b) => a.copy().add(b), to_2d_vector(0)).div(usefulIntersections.length);
-        // }
-        
-        let normal = circle.pos.copy().sub(avgIntersections.copy()).normalize();
-        let newVel = circle.vel.copy().sub(normal.copy().mult(2 * circle.vel.copy().dot(normal)));
-        
-        //reflect circle velocity
-        circle.set_vel([newVel.x, newVel.y]);
+        if(intersections.length > 0){
+            //As long as there are intersection points left, take average of all intersection points
+            let avgIntersections = intersections.reduce((a, b) => a.copy().add(b), to_2d_vector(0)).div(intersections.length);
+            let pushBacks = intersections.map(i => i.copy().add(circle.pos.copy().sub(i).setMag(circle.rad)));
+            let newPos = pushBacks.reduce((a, b) => a.copy().add(b), to_2d_vector(0)).div(intersections.length);
+            // let newPos = avgIntersections.copy().add(circle.pos.copy().sub(avgIntersections).setMag(circle.rad)); //not good
+
+            circle.set_pos([newPos.x, newPos.y]);
+            
+            // pushBacks.forEach(p => {
+            //     fill(0,255,255);
+            //     draw_ellipse_vec(avgIntersections, 10);
+            // });
+            
+            let normal = circle.pos.copy().sub(avgIntersections.copy()).normalize();
+            let newVel = circle.vel.copy().sub(normal.copy().mult(2 * circle.vel.copy().dot(normal)));
+            
+            //reflect circle velocity
+            circle.set_vel([newVel.x, newVel.y]);
+        }
+
 
         return true;
     }

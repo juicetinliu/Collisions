@@ -8,7 +8,7 @@ class Scene{
         this.hasGravity = false;
         this.gravity = createVector(0, 0.9);
         this.friction = 0.999;
-        this.simulationSteps = 4;
+        this.simulationSteps = 10;
 
         this.things = [];
         this.collidedThingPairs = [];
@@ -84,8 +84,8 @@ class Scene{
         let pairID = 0;
         //identify colliding pairs
         this.things.forEach(thing => {
-            let search_radius = thing.boundingBox.dims.x + 1;  //TODO: Make lines search radius match line length
-            if(thing.vel.mag() === 0) search_radius = thing.boundingBox.dims.x;
+            let search_radius = thing.boundingBox.max_dims() + 1;  //TODO: Make lines search radius match line length
+            if(thing.vel.mag() === 0) search_radius = thing.boundingBox.max_dims();
             let nearby = this.collisionGraph.search_circle(thing.pos, search_radius); //TODO: Make search shape custom to each thing
             
             if(toggleDebug){    
