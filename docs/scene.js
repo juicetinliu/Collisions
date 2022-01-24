@@ -8,7 +8,7 @@ class Scene{
         this.hasGravity = false;
         this.gravity = createVector(0, 0.9);
         this.friction = 0.999;
-        this.simulationSteps = 10;
+        this.simulationSteps = 4;
 
         this.things = [];
         this.collidedThingPairs = [];
@@ -84,8 +84,8 @@ class Scene{
         let pairID = 0;
         //identify colliding pairs
         this.things.forEach(thing => {
-            let search_radius = thing.boundingBox.max_dims() + 1;  //TODO: Make lines search radius match line length
-            if(thing.vel.mag() === 0) search_radius = thing.boundingBox.max_dims();
+            let search_radius = thing.boundingBox.min_bounding_circle_rad() + 1;  //TODO: Make lines search radius match line length
+            if(thing.vel.mag() === 0) search_radius = thing.boundingBox.min_bounding_circle_rad();
             let nearby = this.collisionGraph.search_circle(thing.pos, search_radius); //TODO: Make search shape custom to each thing
             
             if(toggleDebug){    
@@ -104,7 +104,7 @@ class Scene{
                         if(!object_list_contains(this.collidedThingPairs, newPair)){
                             this.collidedThingPairs.push(newPair);
 
-                            //create CollisionGroups
+                            //create CollisionGroups TODO: DOESN'T WORK PROPERLY - need DFS to work
                             let matchingGroup = this.collisionGroups.filter(group => group.contains(thing) || group.contains(othing))[0];
                             if(matchingGroup){ //if collision group already contains this thing then add this to that group
                                 if(!matchingGroup.contains(thing)) matchingGroup.add_thing(thing);
@@ -172,19 +172,18 @@ class Scene{
                     }
                     possibleProblematicGroups.push(group);
                 }
-                //TODO: If one the other things is a circle and one is a line, then ignore the other circle and only collide with the line
+                //BUG: If two circles hit each other with a line in the middle, multiple collisions occur
+                //BUG: one to many circle collision problem
             }
         });
 
         let resolvedPairs = [] //needed to avoid removing ids in wrong order
 
-        // if(possibleProblematicGroups.length) console.log("problem!");
         possibleProblematicGroups.forEach(group => {
             let problemResolved = this.collider.collide_group(group);
             //remove pairs that were resolved in problematic groups
             if(problemResolved){
                 group.pairIDs.forEach(pid => {
-                    // if(!resolvedPairs.includes(pid))
                     resolvedPairs.push(pid);
                 });
             }

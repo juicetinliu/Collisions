@@ -8,7 +8,7 @@ let toggleCollisionGraph = 1;
 let togglePause = false;
 let toggleHighlightCollidingGroups = false;
 
-function setup() {
+function setup(){
     renderer = createCanvas(windowWidth, windowHeight);
     scene = new Scene();
     scene.toggle_collision_graph(toggleCollisionGraph);
@@ -69,53 +69,22 @@ function setup() {
     // scene.add_thing(new Line([windowWidth/2+250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
     // scene.add_thing(new Line([windowWidth/2-250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
 
-    scene_create_cup();
+    scene_add_cup();
 
     frameRate(60);
     smooth();
 }
 //https://www.youtube.com/watch?v=ebq7L2Wtbl4&ab_channel=javidx9
 
-function draw() {
+function draw(){
     background(0,50);
-    fill(255);
-    text(frameRate().toFixed(1), 20, 20);
-    textAlign(CENTER);
-    if(toggleDebug){    
-        text("d - Debug | s - Scene Graph Type | g - Toggle Gravity | x - Show Collision Groups", width/2, height-20);
-    }else{
-        text("d - Debug", width/2, height-20);
-    }
-
-    noFill();
-    stroke(255,128);
-    draw_ellipse_vec(createVector(mouseX, mouseY), 20);
-
-    textAlign(LEFT);
     scene_add_objects();
     scene.render();
     
-    fill(255);
-    noStroke();
-    if(toggleDebug){
-        text("Things", 20, 40);
-        text("Checks", 20, 60);
-        text("Collisions", 20, 80);
-        text("Graph", 20, 100);
-        text("Gravity", 20, 120);
-
-        text(scene.things.length, 80, 40);
-        text(statCheckedCollisions, 80, 60);
-        text(statCollidingPairs, 80, 80);
-        
-        text(["DVBT", "Quadtree", "Array"][toggleCollisionGraph], 80, 100);
-        
-        toggleGravity ? fill(0,255,0) : fill(255,0,0);
-        text(toggleGravity ? "ON" : "OFF", 80, 120);
-    }
+    hud();
 }
 
-function scene_create_cup(){
+function scene_add_cup(){
     scene.add_thing(new Line([windowWidth/2+100, windowHeight/2+200], [windowWidth/2-100, windowHeight/2+200]));
     scene.add_thing(new Line([windowWidth/2+100, windowHeight/2+200], [windowWidth/2+100, windowHeight/2+100]));
     scene.add_thing(new Line([windowWidth/2-100, windowHeight/2+200], [windowWidth/2-100, windowHeight/2+100]));
@@ -128,7 +97,7 @@ function scene_create_cup(){
     scene.add_thing(new Line([windowWidth/2-120, windowHeight/2+100], [windowWidth/2-100, windowHeight/2+100]));
 }
 
-function scene_add_objects() {
+function scene_add_objects(){
     if(scene.things.length < 50){
         scene.add_thing(new Circle([windowWidth/2+75, windowHeight/2], 0, 0, random(5,10), CollisionType.DYNAMIC));
         scene.add_thing(new Circle([windowWidth/2-75, windowHeight/2], 0, 0, random(5,10), CollisionType.DYNAMIC));
@@ -161,5 +130,41 @@ function keyPressed(){
         toggleHighlightCollidingGroups = !toggleHighlightCollidingGroups;
     }else if (keyCode === 32){ //space
         togglePause = !togglePause;
+    }
+}
+
+function hud(){
+    noFill();
+    stroke(255,128);
+    draw_ellipse_vec(createVector(mouseX, mouseY), 20);
+    
+    fill(255);
+    noStroke();
+    text(frameRate().toFixed(1), 20, 20);
+    if(toggleDebug){    
+        textAlign(CENTER);
+        text("d - Debug | s - Scene Graph Type | g - Toggle Gravity | x - Show Collision Groups", width/2, height-20);
+        
+        textAlign(LEFT);
+        text("Things", 20, 40);
+        text(scene.things.length, 80, 40);
+        
+        text("Checks", 20, 60);
+        text(statCheckedCollisions, 80, 60);
+        
+        text("Collisions", 20, 80);
+        text(statCollidingPairs, 80, 80);
+        
+        text("Graph", 20, 100);
+        text(["DVBT", "Quadtree", "Array"][toggleCollisionGraph], 80, 100);
+        
+        text("Gravity", 20, 120);
+        toggleGravity ? fill(0,255,0) : fill(255,0,0);
+        text(toggleGravity ? "ON" : "OFF", 80, 120);
+
+    }else{
+        textAlign(CENTER);
+        text("d - Debug", width/2, height-20);
+        textAlign(LEFT);
     }
 }

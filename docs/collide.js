@@ -140,7 +140,7 @@ class ThingCollider{
         circle.set_vel([newVel.x, newVel.y]);
     }
 
-    collide_group(group = new CollidedThingGroup()){
+    collide_group(group){
         //Currently only contains groups with thing = circle and otherthings = lines;
         
         let circle = group.thing; //circle

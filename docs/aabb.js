@@ -41,6 +41,10 @@ class AABB{
         return max(this.dims.x, this.dims.y);
     }
 
+    min_bounding_circle_rad(){
+        return this.dims.mag()/2;
+    }
+
     draw(){
         stroke(255, 0, 0);
         noFill();
