@@ -18,7 +18,7 @@ class Scene{
 
         this.collisionGraph = new Tree();
         // this.collisionGraph = new QuadTree(this.pos.x, this.pos.y, this.dims.x, this.dims.y);
-        this.collider = new ThingCollider();
+        this.collider = new ThingCollider(this.friction);
 
         this.mouseClick = 0;
 
@@ -51,9 +51,9 @@ class Scene{
             this.collisionGraph.draw();
         }
         this.mouse_interaction();
-        
+
         for(let i = 0; i < this.simulationSteps; i++){
-            this.run();
+            this.run(this.simulationSteps);
         }
         // this.things.forEach(thing => thing.highlighted ? thing.draw(128) : thing.draw_with_bounding_box());
         this.things.forEach(thing => thing.highlighted ? thing.draw(128) : thing.draw());
@@ -65,7 +65,7 @@ class Scene{
         return thing;
     }
 
-    run(){
+    run(simulationSteps){
         this.collisionGraph.reset();
         this.collidedThingPairs = [];
         this.collidedThingGroups = [];
@@ -76,7 +76,7 @@ class Scene{
         this.things.forEach(thing => {    
             thing.set_scene_index(thingIndex);
             thingIndex++;
-            thing.move(this.friction, this.hasGravity, this.gravity, this.simulationSteps);
+            thing.move(this.hasGravity, this.gravity, simulationSteps);
             this.collisionGraph.insert(thing);
         });
         statCheckedCollisions = 0;
@@ -89,6 +89,7 @@ class Scene{
             let nearby = this.collisionGraph.search_circle(thing.pos, search_radius); //TODO: Make search shape custom to each thing
             
             if(toggleDebug){    
+                noFill();
                 stroke(0,255,255);
                 draw_ellipse_vec(thing.pos, search_radius);
             }
@@ -157,6 +158,7 @@ class Scene{
 
         //===========================================================================
         //FIXES: BUG_1: MULTIPLE REFLECTIONS CAN OCCUR BETWEEN A CIRCLE AND TWO LINES
+        //Why this is a problem and more: https://www.myphysicslab.com/engine2D/collision-methods-en.html
         //=========================================================================== 
         let possibleProblematicGroups = [];
         
@@ -212,6 +214,11 @@ class Scene{
                 this.things.splice(t, 1);
             }
         }
+
+        //apply friction to all velocities
+        this.things.forEach(thing => {
+            thing.apply_friction(this.friction);
+        });
     }
 
     mouse_interaction(){

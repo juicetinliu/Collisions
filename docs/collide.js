@@ -1,5 +1,7 @@
 class ThingCollider{
-    constructor(){}
+    constructor(friction){
+        this.friction = friction;
+    }
 
     check_collision(a, b){
         if(a.collisionType === CollisionType.NONE || b.collisionType === CollisionType.NONE) return false;
@@ -112,8 +114,9 @@ class ThingCollider{
             bMomentum = bDotNormal;
         }
         
-        let aNewVel = tangent.copy().mult(a.vel.dot(tangent)).add(normal.copy().mult(aMomentum));
-        let bNewVel = tangent.copy().mult(b.vel.dot(tangent)).add(normal.copy().mult(bMomentum));
+        //Multiply by friction
+        let aNewVel = tangent.copy().mult(a.vel.dot(tangent)).add(normal.copy().mult(aMomentum)).mult(this.friction);
+        let bNewVel = tangent.copy().mult(b.vel.dot(tangent)).add(normal.copy().mult(bMomentum)).mult(this.friction);
 
         if(!aStatic){
             a.set_vel([aNewVel.x, aNewVel.y]);
@@ -134,7 +137,9 @@ class ThingCollider{
         circle.set_pos([newPos.x, newPos.y]);
         
         let normal = circle.pos.copy().sub(intersection.copy()).normalize();
-        let newVel = circle.vel.copy().sub(normal.copy().mult(2 * circle.vel.copy().dot(normal)));
+
+        //Multiply by friction
+        let newVel = circle.vel.copy().sub(normal.copy().mult(2 * circle.vel.copy().dot(normal))).mult(this.friction);
         
         //reflect circle velocity
         circle.set_vel([newVel.x, newVel.y]);
@@ -158,8 +163,6 @@ class ThingCollider{
             });
         }
 
-        // console.log(intersections)
-
         if(intersections.length > 0){
             //As long as there are intersection points left, take average of all intersection points
             let avgIntersections = intersections.reduce((a, b) => a.copy().add(b), to_2d_vector(0)).div(intersections.length);
@@ -175,7 +178,9 @@ class ThingCollider{
             // });
             
             let normal = circle.pos.copy().sub(avgIntersections.copy()).normalize();
-            let newVel = circle.vel.copy().sub(normal.copy().mult(2 * circle.vel.copy().dot(normal)));
+
+            //Multiply by friction
+            let newVel = circle.vel.copy().sub(normal.copy().mult(2 * circle.vel.copy().dot(normal))).mult(this.friction);
             
             //reflect circle velocity
             circle.set_vel([newVel.x, newVel.y]);

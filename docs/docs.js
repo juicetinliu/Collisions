@@ -69,6 +69,9 @@ function setup(){
     // scene.add_thing(new Line([windowWidth/2+250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
     // scene.add_thing(new Line([windowWidth/2-250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
 
+    scene.add_thing(new Line([windowWidth/2, windowHeight/2+150], [windowWidth/2-150, windowHeight/2+100]));
+    scene.add_thing(new Line([windowWidth/2, windowHeight/2+50], [windowWidth/2+150, windowHeight/2]));
+
     scene_add_cup();
 
     frameRate(60);
@@ -77,33 +80,35 @@ function setup(){
 //https://www.youtube.com/watch?v=ebq7L2Wtbl4&ab_channel=javidx9
 
 function draw(){
-    background(0,50);
+    background(0);
+    
     scene_add_objects();
+    
     scene.render();
     
     hud();
 }
 
 function scene_add_cup(){
-    scene.add_thing(new Line([windowWidth/2+100, windowHeight/2+200], [windowWidth/2-100, windowHeight/2+200]));
-    scene.add_thing(new Line([windowWidth/2+100, windowHeight/2+200], [windowWidth/2+100, windowHeight/2+100]));
-    scene.add_thing(new Line([windowWidth/2-100, windowHeight/2+200], [windowWidth/2-100, windowHeight/2+100]));
+    scene.add_thing(new Line([windowWidth/2+100, windowHeight/2+300], [windowWidth/2-100, windowHeight/2+300]));
+    scene.add_thing(new Line([windowWidth/2+100, windowHeight/2+300], [windowWidth/2+100, windowHeight/2+200]));
+    scene.add_thing(new Line([windowWidth/2-100, windowHeight/2+300], [windowWidth/2-100, windowHeight/2+200]));
 
-    scene.add_thing(new Line([windowWidth/2+120, windowHeight/2+220], [windowWidth/2-120, windowHeight/2+220]));
-    scene.add_thing(new Line([windowWidth/2+120, windowHeight/2+220], [windowWidth/2+120, windowHeight/2+100]));
-    scene.add_thing(new Line([windowWidth/2-120, windowHeight/2+220], [windowWidth/2-120, windowHeight/2+100]));
+    scene.add_thing(new Line([windowWidth/2+120, windowHeight/2+320], [windowWidth/2-120, windowHeight/2+320]));
+    scene.add_thing(new Line([windowWidth/2+120, windowHeight/2+320], [windowWidth/2+120, windowHeight/2+200]));
+    scene.add_thing(new Line([windowWidth/2-120, windowHeight/2+320], [windowWidth/2-120, windowHeight/2+200]));
 
-    scene.add_thing(new Line([windowWidth/2+120, windowHeight/2+100], [windowWidth/2+100, windowHeight/2+100]));
-    scene.add_thing(new Line([windowWidth/2-120, windowHeight/2+100], [windowWidth/2-100, windowHeight/2+100]));
+    scene.add_thing(new Line([windowWidth/2+120, windowHeight/2+200], [windowWidth/2+100, windowHeight/2+200]));
+    scene.add_thing(new Line([windowWidth/2-120, windowHeight/2+200], [windowWidth/2-100, windowHeight/2+200]));
 }
 
 function scene_add_objects(){
     if(scene.things.length < 50){
-        scene.add_thing(new Circle([windowWidth/2+75, windowHeight/2], 0, 0, random(5,10), CollisionType.DYNAMIC));
-        scene.add_thing(new Circle([windowWidth/2-75, windowHeight/2], 0, 0, random(5,10), CollisionType.DYNAMIC));
-        scene.add_thing(new Circle([windowWidth/2, windowHeight/2+75], 0, 0, random(5,10), CollisionType.DYNAMIC));
-        scene.add_thing(new Circle([windowWidth/2, windowHeight/2-75], 0, 0, random(5,10), CollisionType.DYNAMIC));
-        scene.add_thing(new Circle([windowWidth/2, windowHeight/2], 0, 0, random(5,10), CollisionType.DYNAMIC));
+        scene.add_thing(new Circle([windowWidth/2+75, windowHeight/2], 0, 0, random(5,15), CollisionType.DYNAMIC));
+        scene.add_thing(new Circle([windowWidth/2-75, windowHeight/2], 0, 0, random(5,15), CollisionType.DYNAMIC));
+        scene.add_thing(new Circle([windowWidth/2, windowHeight/2+75], 0, 0, random(5,15), CollisionType.DYNAMIC));
+        scene.add_thing(new Circle([windowWidth/2, windowHeight/2-75], 0, 0, random(5,15), CollisionType.DYNAMIC));
+        scene.add_thing(new Circle([windowWidth/2, windowHeight/2], 0, 0, random(5,15), CollisionType.DYNAMIC));
         // scene.add_thing(new Circle([windowWidth/2, windowHeight*2/3], 0, 0, 5, CollisionType.DYNAMIC));
         // scene.add_thing(new Circle([random(windowWidth/4), random(windowHeight)], 0, 0, random(1, 50), CollisionType.DYNAMIC));
         // scene.add_thing(new Circle([random(windowWidth*3/4,windowWidth), random(windowHeight)], 0, 0, random(1, 50), CollisionType.DYNAMIC));
@@ -164,7 +169,7 @@ function hud(){
 
     }else{
         textAlign(CENTER);
-        text("d - Debug", width/2, height-20);
+        text("d - Debug | g - Toggle Gravity", width/2, height-20);
         textAlign(LEFT);
     }
 }

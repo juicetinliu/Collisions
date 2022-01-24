@@ -1,4 +1,4 @@
-const MIN_VEL_TOLERANCE = 1e-4;
+const MIN_VEL_TOLERANCE = 1e-2;
 const SIMULATION_SPEED = 25;
 
 const types_of_things = {
@@ -25,7 +25,7 @@ class Thing{
         this.mass = mass;
         this.thingType = thingType;
         this.collisionType = collisionType;
-        this.tmpCollisionType = collisionType;
+        this.ogCollisionType = collisionType;
         this.boundingBox = null;
 
         this.highlighted = false;
@@ -64,7 +64,7 @@ class Thing{
         }
     }
 
-    move(friction, hasGravity, gravity, simSteps){
+    move(hasGravity, gravity, simSteps){
         if(this.locked) return;
 
         this.vel.add(this.acc.copy().mult(deltaTime/(SIMULATION_SPEED * simSteps)));
@@ -72,11 +72,17 @@ class Thing{
         this.pos.add(this.vel.copy().mult(deltaTime/(SIMULATION_SPEED * simSteps)));
 
         this.boundingBox.update_pos(this.pos);
+    }
 
+    apply_friction(friction){
         if(this.collisionType !== CollisionType.STATIC){
             this.vel.mult(friction);
             this.acc.mult(friction);
         }
+        this.constrain_motion();
+    }
+
+    constrain_motion(){
         if(this.vel.magSq() < MIN_VEL_TOLERANCE) this.vel.setMag(0);
         if(this.acc.magSq() < MIN_VEL_TOLERANCE) this.acc.setMag(0);
     }
@@ -88,7 +94,7 @@ class Thing{
 
     unlock(){
         this.locked = false;
-        this.collisionType = this.tmpCollisionType;
+        this.collisionType = this.ogCollisionType;
     }
 
     set_pos(newpos){
@@ -97,6 +103,7 @@ class Thing{
 
     set_vel(newvel){
         this.vel.set(...newvel);
+        this.constrain_motion();
     }
 
     intersects(){
@@ -248,9 +255,9 @@ class Circle extends Thing{
         draw_ellipse_vec(this.pos, this.rad);
         // if(this.vel.magSq() === 0){
         //     draw_ellipse_vec(this.pos, this.rad/4);
-
         // }else{
-        //     draw_line_vec(this.pos, this.pos.copy().add(this.vel.copy().mult(10)));
+        //     draw_line_vec(this.pos, this.pos.copy().add(this.vel.copy().mult(100)));
+        //     // text(this.vel.magSq(), this.pos.x, this.pos.y);
         // }
     }
 
