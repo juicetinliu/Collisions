@@ -1,4 +1,4 @@
-const MIN_VEL_TOLERANCE = 1e-2;
+const MIN_VEL_TOLERANCE = 1e-4;
 const SIMULATION_SPEED = 25;
 
 const types_of_things = {
@@ -19,6 +19,8 @@ let CollisionType = collision_properties;
 
 class Thing{
     constructor(pos = [0, 0], vel = [0, 0], acc = [0, 0], mass = 0, thingType = null, collisionType = CollisionType.NONE){
+        this.sceneIndex = 0;
+
         this.pos = to_2d_vector(pos);
         this.vel = to_2d_vector(vel);
         this.acc = to_2d_vector(acc);
@@ -31,11 +33,15 @@ class Thing{
         this.highlighted = false;
         this.locked = false;
 
-        this.sceneIndex = 0;
+        this.collidedThings = [];
     }
 
     set_scene_index(index){
         this.sceneIndex = index;
+    }
+
+    set_collided_things_from_collided_thing_group(group){
+        this.collidedThings = group.otherThings;
     }
 
     draw(){
@@ -98,11 +104,19 @@ class Thing{
     }
 
     set_pos(newpos){
-        this.pos.set(...newpos);
+        if(Array.isArray(newpos)){
+            this.pos.set(...newpos);
+        }else{
+            this.pos.set(newpos);
+        }
     }
 
     set_vel(newvel){
-        this.vel.set(...newvel);
+        if(Array.isArray(newvel)){
+            this.vel.set(...newvel);
+        }else{
+            this.vel.set(newvel);
+        }
         this.constrain_motion();
     }
 

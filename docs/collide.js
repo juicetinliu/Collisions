@@ -58,19 +58,19 @@ class ThingCollider{
         if(!(aStatic || bStatic)){ //neither are static
             if(prePosDiff.magSq() < 1e-6){ //add random noise if objects spawn exactly on each other
                 let newShiftPos = b.pos.copy().add(p5.Vector.random2D().setMag(1e-3));
-                b.set_pos([newShiftPos.x, newShiftPos.y]);
+                b.set_pos(newShiftPos);
                 console.log("shifting");
             }
         }else if(aStatic){
             if(prePosDiff.magSq() < 1e-6){
                 let newShiftPos = b.pos.copy().add(p5.Vector.random2D().setMag(1e-3));
-                b.set_pos([newShiftPos.x, newShiftPos.y]);
+                b.set_pos(newShiftPos);
                 console.log("shifting");
             }
         }else if(bStatic){
             if(prePosDiff.magSq() < 1e-6){
                 let newShiftPos = a.pos.copy().add(p5.Vector.random2D().setMag(1e-3));
-                a.set_pos([newShiftPos.x, newShiftPos.y]);
+                a.set_pos(newShiftPos);
                 console.log("shifting");
             }
         }
@@ -83,11 +83,11 @@ class ThingCollider{
 
         if(!aStatic){
             let aNewPos = a.pos.copy().sub(overlap);
-            a.set_pos([aNewPos.x, aNewPos.y]);
+            a.set_pos(aNewPos);
         }
         if(!bStatic){
             let bNewPos = b.pos.copy().add(overlap);
-            b.set_pos([bNewPos.x, bNewPos.y]);            
+            b.set_pos(bNewPos);
         }
 
         //momentum and velocity calculations
@@ -119,10 +119,10 @@ class ThingCollider{
         let bNewVel = tangent.copy().mult(b.vel.dot(tangent)).add(normal.copy().mult(bMomentum)).mult(this.friction);
 
         if(!aStatic){
-            a.set_vel([aNewVel.x, aNewVel.y]);
+            a.set_vel(aNewVel);
         }
         if(!bStatic){
-            b.set_vel([bNewVel.x, bNewVel.y]);
+            b.set_vel(bNewVel);
         }
     }
 
@@ -134,15 +134,16 @@ class ThingCollider{
         if(circle.collisionType === CollisionType.STATIC) return;
 
         let newPos = intersection.copy().add(circle.pos.copy().sub(intersection).setMag(circle.rad));
-        circle.set_pos([newPos.x, newPos.y]);
+        circle.set_pos(newPos);
         
         let normal = circle.pos.copy().sub(intersection.copy()).normalize();
 
         //Multiply by friction
-        let newVel = circle.vel.copy().sub(normal.copy().mult(2 * circle.vel.copy().dot(normal))).mult(this.friction);
+        let newVel = circle.vel.copy().sub(normal.copy().mult(2 * circle.vel.copy().dot(normal)));
         
+        newVel = newVel.setMag(circle.vel.mag());
         //reflect circle velocity
-        circle.set_vel([newVel.x, newVel.y]);
+        circle.set_vel(newVel);
     }
 
     collide_group(group){
@@ -153,13 +154,14 @@ class ThingCollider{
         
         let intersections = object_list_remove_duplicates(group.intersections);
 
+        let circleVel = circle.vel;
 
         //PROBLEM HERE SEE DIAGRAM
         //Ignore intersection points that have normals which are perpendicular to direction of travel (since there'd be no effect on the velocity)
-        if(circle.vel.magSq() > MIN_VEL_TOLERANCE && intersections.length === 2){
+        if(circleVel.magSq() > MIN_VEL_TOLERANCE && intersections.length === 2){
             intersections = intersections.filter(i => {
                 let iNormal = circle.pos.copy().sub(i.copy()).normalize();
-                return abs(iNormal.copy().dot(circle.vel.copy().normalize())) > 1e-1;
+                return abs(iNormal.copy().dot(circleVel.copy().normalize())) > 1e-1;
             });
         }
 
@@ -170,7 +172,7 @@ class ThingCollider{
             let newPos = pushBacks.reduce((a, b) => a.copy().add(b), to_2d_vector(0)).div(intersections.length);
             // let newPos = avgIntersections.copy().add(circle.pos.copy().sub(avgIntersections).setMag(circle.rad)); //not good
 
-            circle.set_pos([newPos.x, newPos.y]);
+            circle.set_pos(newPos);
             
             // pushBacks.forEach(p => {
             //     fill(0,255,255);
@@ -180,10 +182,12 @@ class ThingCollider{
             let normal = circle.pos.copy().sub(avgIntersections.copy()).normalize();
 
             //Multiply by friction
-            let newVel = circle.vel.copy().sub(normal.copy().mult(2 * circle.vel.copy().dot(normal))).mult(this.friction);
+            let newVel = circleVel.copy().sub(normal.copy().mult(2 * circleVel.copy().dot(normal)));
+
+            newVel = newVel.setMag(circleVel.mag());
             
             //reflect circle velocity
-            circle.set_vel([newVel.x, newVel.y]);
+            circle.set_vel(newVel);
         }
 
 

@@ -14,6 +14,7 @@ class Scene{
         this.collidedThingPairs = [];
         this.collidedThingGroups = [];
 
+        this.collidedThingGroupsThingIds = [];
         this.collisionGroups = [];
 
         this.collisionGraph = new Tree();
@@ -69,13 +70,14 @@ class Scene{
         this.collisionGraph.reset();
         this.collidedThingPairs = [];
         this.collidedThingGroups = [];
+        this.collidedThingGroupsThingIds = [];
         this.collisionGroups = [];
 
         //move and set indices
-        let thingIndex = 0;
+        let sceneIndexCounter = 0;
         this.things.forEach(thing => {    
-            thing.set_scene_index(thingIndex);
-            thingIndex++;
+            thing.set_scene_index(sceneIndexCounter);
+            sceneIndexCounter++;
             thing.move(this.hasGravity, this.gravity, simulationSteps);
             this.collisionGraph.insert(thing);
         });
@@ -84,9 +86,9 @@ class Scene{
         let pairID = 0;
         //identify colliding pairs
         this.things.forEach(thing => {
-            let search_radius = thing.boundingBox.min_bounding_circle_rad() + 1;  //TODO: Make lines search radius match line length
-            if(thing.vel.mag() === 0) search_radius = thing.boundingBox.min_bounding_circle_rad();
-            let nearby = this.collisionGraph.search_circle(thing.pos, search_radius); //TODO: Make search shape custom to each thing
+            let search_radius = thing.boundingBox.min_bounding_circle_rad() + 1;
+            // if(thing.vel.mag() === 0) search_radius = thing.boundingBox.min_bounding_circle_rad();
+            let nearby = this.collisionGraph.search_circle(thing.pos, search_radius); //TODO: Make search shape custom to each thing?
             
             if(toggleDebug){    
                 noFill();
@@ -105,16 +107,7 @@ class Scene{
                         if(!object_list_contains(this.collidedThingPairs, newPair)){
                             this.collidedThingPairs.push(newPair);
 
-                            //create CollisionGroups TODO: DOESN'T WORK PROPERLY - need DFS to work
-                            let matchingGroup = this.collisionGroups.filter(group => group.contains(thing) || group.contains(othing))[0];
-                            if(matchingGroup){ //if collision group already contains this thing then add this to that group
-                                if(!matchingGroup.contains(thing)) matchingGroup.add_thing(thing);
-                                if(!matchingGroup.contains(othing)) matchingGroup.add_thing(othing);
-                            }else{
-                                this.collisionGroups.push(newPair.to_collision_group());
-                            }
-
-                            //create CollidingThingGroups
+                            //create CollidingThingGroups from pairs
                             let matchingThingGroup = this.collidedThingGroups.filter(group => group.contains(thing))[0];
                             let matchingOThingGroup = this.collidedThingGroups.filter(group => group.contains(othing))[0];
                             if(matchingThingGroup || matchingOThingGroup){ //if collision group already contains this thing then add this to that group
@@ -141,14 +134,43 @@ class Scene{
         });
         statCollidingPairs = this.collidedThingPairs.length;
 
+
         if(toggleHighlightCollidingGroups){
+            //Find groups of colliding objects from collidedThingGroups
+            this.collidedThingGroups.forEach(group => {
+                group.thing.set_collided_things_from_collided_thing_group(group);
+                this.collidedThingGroupsThingIds.push(group.thing.sceneIndex);
+            });
+ 
+            let visitedIds = Array(this.things.length).fill(false);            
+            this.collidedThingGroupsThingIds.forEach(thingId => {
+                if(!visitedIds[thingId]){
+                    visitedIds[thingId] = true;
+                    let queue = [thingId];
+                    let thisGroup = [];
+                    while(queue.length){
+                        let checkThingId = queue.shift();
+                        thisGroup.push(checkThingId);
+
+                        this.things[checkThingId].collidedThings.forEach(cThing => {
+                            let cThingId = cThing.sceneIndex;
+                            if(!visitedIds[cThingId]) {
+                                queue.push(cThingId);
+                                visitedIds[cThingId] = true;
+                            }
+                        })
+                    }
+                    if(thisGroup.length) this.collisionGroups.push(thisGroup);
+                }
+            });
+
             colorMode(HSB);
             let col = 0;
             let colAddAmount = 360/this.collisionGroups.length;
             this.collisionGroups.forEach(group => {
                 let thisColor = color(col, 100, 100);
-                group.things.forEach(thing => {
-                    thing.draw(-1, thisColor, 10);
+                group.forEach(thingId => {
+                    this.things[thingId].draw(-1, thisColor, 10);
                 });
                 col += colAddAmount
             });
@@ -174,6 +196,7 @@ class Scene{
                     }
                     possibleProblematicGroups.push(group);
                 }
+                //TODO:
                 //BUG: If two circles hit each other with a line in the middle, multiple collisions occur
                 //BUG: one to many circle collision problem
             }
@@ -198,6 +221,7 @@ class Scene{
         });
         //===========================================================================
 
+        //TODO: Fix jittering
         //resolve remaining colliding pairs
         this.collidedThingPairs.forEach(pair => {
             this.collider.collide(pair.a, pair.b, pair.intersection); 
@@ -207,6 +231,11 @@ class Scene{
             }
         });
 
+        //apply friction to all velocities
+        this.things.forEach(thing => {
+            thing.apply_friction(this.friction);
+        });
+
         //remove things that move out of scene
         for(let t = this.things.length - 1; t >= 0; t--){
             let thing = this.things[t];
@@ -214,11 +243,6 @@ class Scene{
                 this.things.splice(t, 1);
             }
         }
-
-        //apply friction to all velocities
-        this.things.forEach(thing => {
-            thing.apply_friction(this.friction);
-        });
     }
 
     mouse_interaction(){
@@ -243,7 +267,7 @@ class Scene{
                 this.selectedThing.highlight();
             }
             this.selectedThing.lock();
-            this.selectedThing.set_vel([0,0]);
+            this.selectedThing.set_vel([0, 0]);
 
             this.mouseClick = 2;
         }else if(this.mouseClick === 2){ //clicked -> create selection velocity line
@@ -262,7 +286,7 @@ class Scene{
         }else{ //falling edge
             this.selectedThing.unhighlight();
             this.selectedThing.unlock();
-            this.selectedThing.set_vel([this.selectionVelocity.x, this.selectionVelocity.y]);
+            this.selectedThing.set_vel(this.selectionVelocity);
 
             this.selectedThing = null;
             this.selectionVelocity.set(0,0);
@@ -290,10 +314,6 @@ class CollidedThingPair{ //Contains a pair of colliding things
     to_groups(pairID){
         return [new CollidedThingGroup(this.a, this.b, pairID, this.intersection), new CollidedThingGroup(this.b, this.a, pairID, this.intersection)];
     }
-
-    to_collision_group(){
-        return new CollisionGroup([this.a, this.b]);
-    }
 }
 
 class CollidedThingGroup{ //Contains a thing and all its colliding things
@@ -320,19 +340,5 @@ class CollidedThingGroup{ //Contains a thing and all its colliding things
 
     contains(thing){
         return this.thing === thing;
-    }
-}
-
-class CollisionGroup{ //Contains all things that are connected through collisions
-    constructor(things){
-        this.things = things;
-    }
-
-    add_thing(thing){
-        this.things.push(thing);
-    }
-
-    contains(thing){
-        return object_list_contains(this.things, thing);
     }
 }
