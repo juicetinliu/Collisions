@@ -254,7 +254,7 @@ class Scene{
                     this.selectedThing = thing;
                 }
             });
-            if(this.selectedThing){
+            if(this.selectedThing && !document.isMobileOrTabletView){
                 this.selectedThing.highlight();
             }
 
@@ -264,8 +264,8 @@ class Scene{
         }else if(this.mouseClick === 1){ //rising edge -> add thing
             if(!this.selectedThing){
                 this.selectedThing = scene.add_thing(new Circle([mouseX,mouseY], [0, 0], 0, 20, CollisionType.DYNAMIC));
-                this.selectedThing.highlight();
             }
+            this.selectedThing.highlight();
             this.selectedThing.lock();
             this.selectedThing.set_vel([0, 0]);
 

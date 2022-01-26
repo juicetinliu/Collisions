@@ -12,6 +12,8 @@ function setup(){
     renderer = createCanvas(windowWidth, windowHeight);
     scene = new Scene();
     scene.toggle_collision_graph(toggleCollisionGraph);
+    toggleGravity = document.isMobileOrTabletView;
+    scene.toggle_gravity(toggleGravity);
     // scene.add_thing(new Circle([windowWidth/4, windowHeight/2], [0, 0], 0, 50, CollisionType.STATIC));
     // scene.add_thing(new Line([0,0], [windowWidth,0]));
     // scene.add_thing(new Line([windowWidth,0], [windowWidth,windowHeight]));
@@ -146,30 +148,33 @@ function hud(){
     fill(255);
     noStroke();
     text(frameRate().toFixed(1), 20, 20);
-    if(toggleDebug){    
-        textAlign(CENTER);
-        text("d - Debug | s - Scene Graph Type | g - Toggle Gravity | x - Show Collision Groups", width/2, height-20);
-        
-        textAlign(LEFT);
-        text("Things", 20, 40);
-        text(scene.things.length, 80, 40);
-        
-        text("Checks", 20, 60);
-        text(statCheckedCollisions, 80, 60);
-        
-        text("Collisions", 20, 80);
-        text(statCollidingPairs, 80, 80);
-        
-        text("Graph", 20, 100);
-        text(["DVBT", "Quadtree", "Array"][toggleCollisionGraph], 80, 100);
-        
-        text("Gravity", 20, 120);
-        toggleGravity ? fill(0,255,0) : fill(255,0,0);
-        text(toggleGravity ? "ON" : "OFF", 80, 120);
+    
+    if(!document.isMobileOrTabletView){
+        if(toggleDebug){    
+            textAlign(CENTER);
+            text("d - Debug | s - Scene Graph Type | g - Toggle Gravity | x - Show Collision Groups", width/2, height-20);
+            
+            textAlign(LEFT);
+            text("Things", 20, 40);
+            text(scene.things.length, 80, 40);
+            
+            text("Checks", 20, 60);
+            text(statCheckedCollisions, 80, 60);
+            
+            text("Collisions", 20, 80);
+            text(statCollidingPairs, 80, 80);
+            
+            text("Graph", 20, 100);
+            text(["DVBT", "Quadtree", "Array"][toggleCollisionGraph], 80, 100);
+            
+            text("Gravity", 20, 120);
+            toggleGravity ? fill(0,255,0) : fill(255,0,0);
+            text(toggleGravity ? "ON" : "OFF", 80, 120);
 
-    }else{
-        textAlign(CENTER);
-        text("d - Debug | g - Toggle Gravity", width/2, height-20);
-        textAlign(LEFT);
+        }else{
+            textAlign(CENTER);
+            text("d - Debug | g - Toggle Gravity", width/2, height-20);
+            textAlign(LEFT);
+        }
     }
 }
