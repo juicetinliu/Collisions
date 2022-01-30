@@ -81,7 +81,7 @@ function setup(){
 function draw(){
     background(0);
     
-    // scene_add_objects();
+    scene_add_objects();
     
     scene.render();
     
