@@ -1,6 +1,4 @@
 let scene;
-let statCheckedCollisions = 0;
-let statCollidingPairs = 0;
 
 let toggleDebug = false;
 let toggleGravity = false;
@@ -15,42 +13,41 @@ function setup(){
     toggleGravity = document.isMobileOrTabletView;
     scene.toggle_gravity(toggleGravity);
     // scene.add_thing(new Circle([windowWidth/4, windowHeight/2], [0, 0], 0, 50, CollisionType.STATIC));
-    // scene.add_thing(new Line([0,0], [windowWidth,0]));
-    // scene.add_thing(new Line([windowWidth,0], [windowWidth,windowHeight]));
-    // scene.add_thing(new Line([windowWidth,windowHeight], [0,windowHeight]));
-    // scene.add_thing(new Line([0,windowHeight], [0,0]));
+    // scene.add_thing(new Wall([0,0], [windowWidth,0]));
+    // scene.add_thing(new Wall([windowWidth,0], [windowWidth,windowHeight]));
+    // scene.add_thing(new Wall([windowWidth,windowHeight], [0,windowHeight]));
+    // scene.add_thing(new Wall([0,windowHeight], [0,0]));
     
-    // scene.add_thing(new Line([200,0], [0,200]));
+    // scene.add_thing(new Wall([200,0], [0,200]));
 
-    // scene.add_thing(new Line([600,0], [800,200]));
-    // scene.add_thing(new Line([600,800], [800,600]));
-    // // scene.add_thing(new Line([200,800], [0,600]));
+    // scene.add_thing(new Wall([600,0], [800,200]));
+    // scene.add_thing(new Wall([600,800], [800,600]));
+    // // scene.add_thing(new Wall([200,800], [0,600]));
 
-    // scene.add_thing(new Line([200,0], [0,200]));
+    // scene.add_thing(new Wall([200,0], [0,200]));
 
-    // scene.add_thing(new Line([200,400], [0,200]));
+    // scene.add_thing(new Wall([200,400], [0,200]));
 
-    // scene.add_thing(new Line([400,200], [200,400]));
-    // scene.add_thing(new Line([400,200], [200,0]));
+    // scene.add_thing(new Wall([400,200], [200,400]));
+    // scene.add_thing(new Wall([400,200], [200,0]));
 
-    // scene.add_thing(new Line([windowWidth/2+150, windowHeight/2+150], [windowWidth/2-150, windowHeight/2+200]));
-    // // scene.add_thing(new Line([windowWidth/2+50, windowHeight/2+350], [windowWidth/2-250, windowHeight/2+300]));
-    // // scene.add_thing(new Line([windowWidth/2+50, windowHeight/2+350], [windowWidth/2+250, windowHeight/2+350]));
-    // // scene.add_thing(new Line([windowWidth/2-250, windowHeight/2+150], [windowWidth/2-250, windowHeight/2+300]));
+    // scene.add_thing(new Wall([windowWidth/2+150, windowHeight/2+150], [windowWidth/2-150, windowHeight/2+200]));
+    // scene.add_thing(new Wall([windowWidth/2+50, windowHeight/2+350], [windowWidth/2-250, windowHeight/2+300]));
+    // scene.add_thing(new Wall([windowWidth/2+50, windowHeight/2+350], [windowWidth/2+250, windowHeight/2+350]));
+    // scene.add_thing(new Wall([windowWidth/2-250, windowHeight/2+150], [windowWidth/2-250, windowHeight/2+300]));
 
     // // scene.add_thing(new Circle([windowWidth/2, windowHeight/2], 0, 0, 25, CollisionType.STATIC));
     // // scene.add_thing(new Circle([windowWidth/2, windowHeight/2], 0, 0, 25, CollisionType.STATIC));
 
-    // // scene.add_thing(new Line([windowWidth/2+150, windowHeight/2], [windowWidth/2, windowHeight/2+150]));
-    // // scene.add_thing(new Line([windowWidth/2-150, windowHeight/2], [windowWidth/2, windowHeight/2+150]));
-    // // scene.add_thing(new Line([windowWidth/2, windowHeight/2-150], [windowWidth/2+150, windowHeight/2]));
-    // // scene.add_thing(new Line([windowWidth/2, windowHeight/2-150], [windowWidth/2-150, windowHeight/2]));
+    // scene.add_thing(new Wall([windowWidth/2+150, windowHeight/2], [windowWidth/2, windowHeight/2+150]));
+    // scene.add_thing(new Wall([windowWidth/2-150, windowHeight/2], [windowWidth/2, windowHeight/2+150]));
+    // scene.add_thing(new Wall([windowWidth/2, windowHeight/2-150], [windowWidth/2+150, windowHeight/2]));
+    // scene.add_thing(new Wall([windowWidth/2, windowHeight/2-150], [windowWidth/2-150, windowHeight/2]));
 
-    // scene.add_thing(new Line([windowWidth/2+250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
-    
-    // scene.add_thing(new Line([windowWidth/2-250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
-    // scene.add_thing(new Line([windowWidth/2, windowHeight/2-250], [windowWidth/2+250, windowHeight/2]));
-    // scene.add_thing(new Line([windowWidth/2, windowHeight/2-250], [windowWidth/2-250, windowHeight/2]));
+    // scene.add_thing(new Wall([windowWidth/2+250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
+    // scene.add_thing(new Wall([windowWidth/2-250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
+    // scene.add_thing(new Wall([windowWidth/2, windowHeight/2-250], [windowWidth/2+250, windowHeight/2]));
+    // scene.add_thing(new Wall([windowWidth/2, windowHeight/2-250], [windowWidth/2-250, windowHeight/2]));
 
 
     // TEST CASES
@@ -67,12 +64,12 @@ function setup(){
     // scene.add_thing(new Circle([windowWidth/2+150, windowHeight/2+400], [-2, 0], 0, 25, CollisionType.DYNAMIC));
 
     // scene.add_thing(new Circle([windowWidth/2+150, windowHeight/2+99], 0, 0, 25, CollisionType.DYNAMIC));
-    // scene.add_thing(new Line([windowWidth/2+150, windowHeight/2+150], [windowWidth/2-150, windowHeight/2+200]));
-    // scene.add_thing(new Line([windowWidth/2+250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
-    // scene.add_thing(new Line([windowWidth/2-250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
+    // scene.add_thing(new Wall([windowWidth/2+150, windowHeight/2+150], [windowWidth/2-150, windowHeight/2+200]));
+    // scene.add_thing(new Wall([windowWidth/2+250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
+    // scene.add_thing(new Wall([windowWidth/2-250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
 
-    scene.add_thing(new Line([windowWidth/2, windowHeight/2+150], [windowWidth/2-150, windowHeight/2+100]));
-    scene.add_thing(new Line([windowWidth/2, windowHeight/2+50], [windowWidth/2+150, windowHeight/2]));
+    scene.add_thing(new Wall([windowWidth/2, windowHeight/2+150], [windowWidth/2-150, windowHeight/2+100]));
+    scene.add_thing(new Wall([windowWidth/2, windowHeight/2+50], [windowWidth/2+150, windowHeight/2]));
 
     scene_add_cup();
 
@@ -84,7 +81,7 @@ function setup(){
 function draw(){
     background(0);
     
-    scene_add_objects();
+    // scene_add_objects();
     
     scene.render();
     
@@ -92,16 +89,16 @@ function draw(){
 }
 
 function scene_add_cup(){
-    scene.add_thing(new Line([windowWidth/2+100, windowHeight/2+300], [windowWidth/2-100, windowHeight/2+300]));
-    scene.add_thing(new Line([windowWidth/2+100, windowHeight/2+300], [windowWidth/2+100, windowHeight/2+200]));
-    scene.add_thing(new Line([windowWidth/2-100, windowHeight/2+300], [windowWidth/2-100, windowHeight/2+200]));
+    scene.add_thing(new Wall([windowWidth/2+100, windowHeight/2+300], [windowWidth/2-100, windowHeight/2+300]));
+    scene.add_thing(new Wall([windowWidth/2+100, windowHeight/2+300], [windowWidth/2+100, windowHeight/2+200]));
+    scene.add_thing(new Wall([windowWidth/2-100, windowHeight/2+300], [windowWidth/2-100, windowHeight/2+200]));
 
-    scene.add_thing(new Line([windowWidth/2+120, windowHeight/2+320], [windowWidth/2-120, windowHeight/2+320]));
-    scene.add_thing(new Line([windowWidth/2+120, windowHeight/2+320], [windowWidth/2+120, windowHeight/2+200]));
-    scene.add_thing(new Line([windowWidth/2-120, windowHeight/2+320], [windowWidth/2-120, windowHeight/2+200]));
+    scene.add_thing(new Wall([windowWidth/2+120, windowHeight/2+320], [windowWidth/2-120, windowHeight/2+320]));
+    scene.add_thing(new Wall([windowWidth/2+120, windowHeight/2+320], [windowWidth/2+120, windowHeight/2+200]));
+    scene.add_thing(new Wall([windowWidth/2-120, windowHeight/2+320], [windowWidth/2-120, windowHeight/2+200]));
 
-    scene.add_thing(new Line([windowWidth/2+120, windowHeight/2+200], [windowWidth/2+100, windowHeight/2+200]));
-    scene.add_thing(new Line([windowWidth/2-120, windowHeight/2+200], [windowWidth/2-100, windowHeight/2+200]));
+    scene.add_thing(new Wall([windowWidth/2+120, windowHeight/2+200], [windowWidth/2+100, windowHeight/2+200]));
+    scene.add_thing(new Wall([windowWidth/2-120, windowHeight/2+200], [windowWidth/2-100, windowHeight/2+200]));
 }
 
 function scene_add_objects(){
@@ -159,10 +156,10 @@ function hud(){
             text(scene.things.length, 80, 40);
             
             text("Checks", 20, 60);
-            text(statCheckedCollisions, 80, 60);
+            text(scene.stats.checkedCollisions, 80, 60);
             
             text("Collisions", 20, 80);
-            text(statCollidingPairs, 80, 80);
+            text(scene.stats.collidingPairs, 80, 80);
             
             text("Graph", 20, 100);
             text(["DVBT", "Quadtree", "Array"][toggleCollisionGraph], 80, 100);

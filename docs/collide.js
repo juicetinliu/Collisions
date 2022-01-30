@@ -6,10 +6,14 @@ class ThingCollider{
     check_collision(a, b){
         if(a.collisionType === CollisionType.NONE || b.collisionType === CollisionType.NONE) return false;
         
+        if(a.collisionType === CollisionType.STATIC && b.collisionType === CollisionType.STATIC) return false;
+
         return a.intersects(b);
     }
 
     collide(a, b, intersection){
+        if(!this.check_collision(a, b)) return; //FIXES: If two circles hit each other with a line in the middle, multiple collisions occur
+
         switch(a.thingType){
 
             case ThingType.CIRCLE:

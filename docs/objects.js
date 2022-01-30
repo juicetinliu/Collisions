@@ -256,6 +256,12 @@ class Line extends Thing{
     }
 }
 
+class Wall extends Line{
+    constructor(posA = [0, 0], posB = [10, 10]){
+        super(posA, posB);
+    }
+}
+
 class Circle extends Thing{
     constructor(pos = [0, 0], vel = [0, 0], acc = [0, 0], rad = 10, collisionType = CollisionType.STATIC, mass = rad){
         super(pos, vel, acc, mass, ThingType.CIRCLE, collisionType);

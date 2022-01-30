@@ -17,14 +17,17 @@ class Scene{
         this.collidedThingGroupsThingIds = [];
         this.collisionGroups = [];
 
-        this.collisionGraph = new Tree();
-        // this.collisionGraph = new QuadTree(this.pos.x, this.pos.y, this.dims.x, this.dims.y);
+        this.collisionGraph = new QuadTree(this.pos.x, this.pos.y, this.dims.x, this.dims.y);
         this.collider = new ThingCollider(this.friction);
 
-        this.mouseClick = 0;
+        this.mouseState = 0;
 
         this.selectedThing = null;
         this.selectionVelocity = createVector(0, 0);
+        this.stats = {
+            checkedCollisions: 0,
+            collidingPairs: 0
+        }
     }
 
     toggle_collision_graph(toggle){
@@ -54,7 +57,7 @@ class Scene{
         this.mouse_interaction();
 
         for(let i = 0; i < this.simulationSteps; i++){
-            this.run(this.simulationSteps);
+            this.run();
         }
         // this.things.forEach(thing => thing.highlighted ? thing.draw(128) : thing.draw_with_bounding_box());
         this.things.forEach(thing => thing.highlighted ? thing.draw(128) : thing.draw());
@@ -66,23 +69,28 @@ class Scene{
         return thing;
     }
 
-    run(simulationSteps){
+    initialize_scene(){
         this.collisionGraph.reset();
         this.collidedThingPairs = [];
         this.collidedThingGroups = [];
         this.collidedThingGroupsThingIds = [];
         this.collisionGroups = [];
+        this.stats.checkedCollisions = 0;
+    }
 
+    initialize_things(){
         //move and set indices
         let sceneIndexCounter = 0;
         this.things.forEach(thing => {    
             thing.set_scene_index(sceneIndexCounter);
             sceneIndexCounter++;
-            thing.move(this.hasGravity, this.gravity, simulationSteps);
+            thing.move(this.hasGravity, this.gravity, this.simulationSteps);
             this.collisionGraph.insert(thing);
         });
-        statCheckedCollisions = 0;
+    }
 
+    //Search through objects to find possibile colliding pairs
+    identify_collisions(){
         let pairID = 0;
         //identify colliding pairs
         this.things.forEach(thing => {
@@ -100,10 +108,10 @@ class Scene{
             nearby.forEach(othing => {
                 if(thing !== othing){
                     let collides = this.collider.check_collision(othing, thing);
-                    statCheckedCollisions ++;
+                    this.stats.checkedCollisions ++;
                     
                     if(collides){  //if pair of things actually collide then create collision pair (collides contains intersection point)
-                        let newPair = new CollidedThingPair(othing, thing, collides);
+                        let newPair = new CollidedThingPair(pairID, othing, thing, collides);
                         if(!object_list_contains(this.collidedThingPairs, newPair)){
                             this.collidedThingPairs.push(newPair);
 
@@ -124,7 +132,7 @@ class Scene{
                                     }
                                 }
                             }else{
-                                this.collidedThingGroups.push(...newPair.to_groups(pairID));
+                                this.collidedThingGroups.push(...newPair.to_groups());
                             }
                             pairID++;
                         }
@@ -132,38 +140,39 @@ class Scene{
                 }
             });
         });
-        statCollidingPairs = this.collidedThingPairs.length;
+        this.stats.collidingPairs = this.collidedThingPairs.length;
+    }
 
+    generate_colliding_groups(renderGroups = false){
+        //Find groups of colliding objects from collidedThingGroups
+        this.collidedThingGroups.forEach(group => {
+            group.thing.set_collided_things_from_collided_thing_group(group);
+            this.collidedThingGroupsThingIds.push(group.thing.sceneIndex);
+        });
 
-        if(toggleHighlightCollidingGroups){
-            //Find groups of colliding objects from collidedThingGroups
-            this.collidedThingGroups.forEach(group => {
-                group.thing.set_collided_things_from_collided_thing_group(group);
-                this.collidedThingGroupsThingIds.push(group.thing.sceneIndex);
-            });
- 
-            let visitedIds = Array(this.things.length).fill(false);            
-            this.collidedThingGroupsThingIds.forEach(thingId => {
-                if(!visitedIds[thingId]){
-                    visitedIds[thingId] = true;
-                    let queue = [thingId];
-                    let thisGroup = [];
-                    while(queue.length){
-                        let checkThingId = queue.shift();
-                        thisGroup.push(checkThingId);
+        let visitedIds = Array(this.things.length).fill(false);            
+        this.collidedThingGroupsThingIds.forEach(thingId => {
+            if(!visitedIds[thingId]){
+                visitedIds[thingId] = true;
+                let queue = [thingId];
+                let thisGroup = [];
+                while(queue.length){
+                    let checkThingId = queue.shift();
+                    thisGroup.push(checkThingId);
 
-                        this.things[checkThingId].collidedThings.forEach(cThing => {
-                            let cThingId = cThing.sceneIndex;
-                            if(!visitedIds[cThingId]) {
-                                queue.push(cThingId);
-                                visitedIds[cThingId] = true;
-                            }
-                        })
-                    }
-                    if(thisGroup.length) this.collisionGroups.push(thisGroup);
+                    this.things[checkThingId].collidedThings.forEach(cThing => {
+                        let cThingId = cThing.sceneIndex;
+                        if(!visitedIds[cThingId]) {
+                            queue.push(cThingId);
+                            visitedIds[cThingId] = true;
+                        }
+                    })
                 }
-            });
+                if(thisGroup.length) this.collisionGroups.push(thisGroup);
+            }
+        });
 
+        if(renderGroups){
             colorMode(HSB);
             let col = 0;
             let colAddAmount = 360/this.collisionGroups.length;
@@ -177,17 +186,29 @@ class Scene{
             strokeWeight();
             colorMode(RGB);
         }
+    }
+
+    run(){
+        this.initialize_scene();
+
+        this.initialize_things();
+
+        this.identify_collisions();
+
+        if(toggleHighlightCollidingGroups){
+            this.generate_colliding_groups(true);
+        }
 
         //===========================================================================
-        //FIXES: BUG_1: MULTIPLE REFLECTIONS CAN OCCUR BETWEEN A CIRCLE AND TWO LINES
+        //FIXES: MULTIPLE REFLECTIONS CAN OCCUR BETWEEN A CIRCLE AND TWO LINES
         //Why this is a problem and more: https://www.myphysicslab.com/engine2D/collision-methods-en.html
         //=========================================================================== 
         let possibleProblematicGroups = [];
         
         this.collidedThingGroups.forEach(group => {
-            if(group.thing.thingType === ThingType.CIRCLE){ //if one of the things is a circle and is colliding with more than one other thing
-                if(group.otherThings.filter(other => other.thingType === ThingType.LINE).length > 1){
-                    for(let o = group.otherThings.length - 1; o >= 0; o--){ //remove non-line things from problematic group
+            if(group.thing.thingType === ThingType.CIRCLE){ //if the group's maing thing is a circle and is colliding with more than one other thing
+                if(group.otherThings.filter(other => other.thingType === ThingType.LINE).length > 1){ //and there's more than one line in that group
+                    for(let o = group.otherThings.length - 1; o >= 0; o--){ //remove non-line things (remember that pairs still exist so they'll be processed later)
                         if(group.otherThings[o].thingType !== ThingType.LINE){
                             group.otherThings.splice(o, 1);
                             group.pairIDs.splice(o, 1);
@@ -196,17 +217,14 @@ class Scene{
                     }
                     possibleProblematicGroups.push(group);
                 }
-                //TODO:
-                //BUG: If two circles hit each other with a line in the middle, multiple collisions occur
-                //BUG: one to many circle collision problem
+                //BUG: one to multiple circle collision problem
             }
         });
 
         let resolvedPairs = [] //needed to avoid removing ids in wrong order
-
         possibleProblematicGroups.forEach(group => {
             let problemResolved = this.collider.collide_group(group);
-            //remove pairs that were resolved in problematic groups
+            //only remove pairs that were resolved in problematic groups
             if(problemResolved){
                 group.pairIDs.forEach(pid => {
                     resolvedPairs.push(pid);
@@ -216,14 +234,16 @@ class Scene{
 
         resolvedPairs = resolvedPairs.sort((a, b) => b - a); //sorts from largest to smallest ids
 
-        resolvedPairs.forEach(pairID => {
+        resolvedPairs.forEach(pairID => { //removes from back to front (since pairIDs already sorted large to small)
             this.collidedThingPairs.splice(pairID, 1);
         });
         //===========================================================================
 
-        //TODO: Fix jittering
+        //TODO: Fix jittering?
+
+        let collidedThingPairsPrioritySorted = this.collidedThingPairs.sort((a, b) => a.priorityQueueID - b.priorityQueueID);
         //resolve remaining colliding pairs
-        this.collidedThingPairs.forEach(pair => {
+        collidedThingPairsPrioritySorted.forEach(pair => {
             this.collider.collide(pair.a, pair.b, pair.intersection); 
             if(toggleDebug){    
                 stroke(0,255,255);
@@ -246,7 +266,7 @@ class Scene{
     }
 
     mouse_interaction(){
-        if(this.mouseClick === 0){ //not clicked
+        if(this.mouseState === 0){ //not clicked
             this.selectedThing = null;
             this.things.forEach(thing => {
                 thing.unhighlight();
@@ -254,14 +274,14 @@ class Scene{
                     this.selectedThing = thing;
                 }
             });
-            if(this.selectedThing && !document.isMobileOrTabletView){
+            if(this.selectedThing && !document.isMobileOrTabletView){ //don't hightlight on mobile view (taps hold their position)
                 this.selectedThing.highlight();
             }
 
             if(mouseIsPressed){
-                this.mouseClick = 1;
+                this.mouseState = 1;
             }
-        }else if(this.mouseClick === 1){ //rising edge -> add thing
+        }else if(this.mouseState === 1){ //rising edge -> add thing
             if(!this.selectedThing){
                 this.selectedThing = scene.add_thing(new Circle([mouseX,mouseY], [0, 0], 0, 20, CollisionType.DYNAMIC));
             }
@@ -269,8 +289,8 @@ class Scene{
             this.selectedThing.lock();
             this.selectedThing.set_vel([0, 0]);
 
-            this.mouseClick = 2;
-        }else if(this.mouseClick === 2){ //clicked -> create selection velocity line
+            this.mouseState = 2;
+        }else if(this.mouseState === 2){ //clicked -> create selection velocity line
             stroke(0, 255, 255);
             draw_line_vec(this.selectedThing.pos, createVector(mouseX, mouseY));
 
@@ -281,7 +301,7 @@ class Scene{
             }
 
             if(!mouseIsPressed){
-                this.mouseClick = 3;
+                this.mouseState = 3;
             }
         }else{ //falling edge
             this.selectedThing.unhighlight();
@@ -291,16 +311,18 @@ class Scene{
             this.selectedThing = null;
             this.selectionVelocity.set(0,0);
 
-            this.mouseClick = 0;
+            this.mouseState = 0;
         }
     }
 }
 
 class CollidedThingPair{ //Contains a pair of colliding things
-    constructor(a, b, i){
+    constructor(id, a, b, i){
+        this.id = id;
         this.a = a;
         this.b = b;
         this.intersection = i;
+        this.priorityQueueID = this.generatePriorityQueueID(this.a, this.b); //lower number = first dealt with
     }
 
     equals(opair){
@@ -311,8 +333,16 @@ class CollidedThingPair{ //Contains a pair of colliding things
         return this.a === thing || this.b === thing;
     }
 
-    to_groups(pairID){
-        return [new CollidedThingGroup(this.a, this.b, pairID, this.intersection), new CollidedThingGroup(this.b, this.a, pairID, this.intersection)];
+    to_groups(){
+        return [new CollidedThingGroup(this.a, this.b, this.id, this.intersection), new CollidedThingGroup(this.b, this.a, this.id, this.intersection)];
+    }
+
+    generatePriorityQueueID(a, b){
+        if((a.thingType === ThingType.LINE && b.thingType === ThingType.CIRCLE) || (a.thingType === ThingType.CIRCLE && b.thingType === ThingType.LINE)){
+            return 0; //first resolve line circle collisions (FIXES: If two circles hit each other with a line in the middle, multiple collisions occur)
+        }else{
+            return 1;
+        }
     }
 }
 
