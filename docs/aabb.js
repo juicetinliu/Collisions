@@ -51,11 +51,3 @@ class AABB{
         draw_rect_center_vec(this.pos, this.dims);
     }
 }
-
-function min_vec(a, b){
-    return createVector(min(a.x, b.x), min(a.y, b.y));
-}
-
-function max_vec(a, b){
-    return createVector(max(a.x, b.x), max(a.y, b.y));
-}

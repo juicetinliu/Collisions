@@ -12,6 +12,7 @@ function setup(){
     scene.toggle_collision_graph(toggleCollisionGraph);
     toggleGravity = document.isMobileOrTabletView;
     scene.toggle_gravity(toggleGravity);
+
     // scene.add_thing(new Circle([windowWidth/4, windowHeight/2], [0, 0], 0, 50, CollisionType.STATIC));
     // scene.add_thing(new Wall([0,0], [windowWidth,0]));
     // scene.add_thing(new Wall([windowWidth,0], [windowWidth,windowHeight]));
@@ -31,47 +32,23 @@ function setup(){
     // scene.add_thing(new Wall([400,200], [200,400]));
     // scene.add_thing(new Wall([400,200], [200,0]));
 
-    // scene.add_thing(new Wall([windowWidth/2+150, windowHeight/2+150], [windowWidth/2-150, windowHeight/2+200]));
-    // scene.add_thing(new Wall([windowWidth/2+50, windowHeight/2+350], [windowWidth/2-250, windowHeight/2+300]));
-    // scene.add_thing(new Wall([windowWidth/2+50, windowHeight/2+350], [windowWidth/2+250, windowHeight/2+350]));
-    // scene.add_thing(new Wall([windowWidth/2-250, windowHeight/2+150], [windowWidth/2-250, windowHeight/2+300]));
-
-    // // scene.add_thing(new Circle([windowWidth/2, windowHeight/2], 0, 0, 25, CollisionType.STATIC));
-    // // scene.add_thing(new Circle([windowWidth/2, windowHeight/2], 0, 0, 25, CollisionType.STATIC));
+    // scene.add_thing(new Circle([windowWidth/2, windowHeight/2], 0, 0, 25, CollisionType.STATIC));
 
     // scene.add_thing(new Wall([windowWidth/2+150, windowHeight/2], [windowWidth/2, windowHeight/2+150]));
     // scene.add_thing(new Wall([windowWidth/2-150, windowHeight/2], [windowWidth/2, windowHeight/2+150]));
     // scene.add_thing(new Wall([windowWidth/2, windowHeight/2-150], [windowWidth/2+150, windowHeight/2]));
     // scene.add_thing(new Wall([windowWidth/2, windowHeight/2-150], [windowWidth/2-150, windowHeight/2]));
 
-    // scene.add_thing(new Wall([windowWidth/2+250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
-    // scene.add_thing(new Wall([windowWidth/2-250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
-    // scene.add_thing(new Wall([windowWidth/2, windowHeight/2-250], [windowWidth/2+250, windowHeight/2]));
-    // scene.add_thing(new Wall([windowWidth/2, windowHeight/2-250], [windowWidth/2-250, windowHeight/2]));
+    scene.add_thing(new Wall([windowWidth/2+250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
+    scene.add_thing(new Wall([windowWidth/2-250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
+    scene.add_thing(new Wall([windowWidth/2, windowHeight/2-250], [windowWidth/2+250, windowHeight/2]));
+    scene.add_thing(new Wall([windowWidth/2, windowHeight/2-250], [windowWidth/2-250, windowHeight/2]));
 
 
-    // TEST CASES
-    // scene.add_thing(new Circle([windowWidth/2-100, windowHeight/2-400], [1, 0], 0, 25, CollisionType.DYNAMIC));
-    // scene.add_thing(new Circle([windowWidth/2, windowHeight/2-400], 0, 0, 25, CollisionType.DYNAMIC));
-    // scene.add_thing(new Circle([windowWidth/2+50, windowHeight/2-400], 0, 0, 25, CollisionType.DYNAMIC));
 
-    // scene.add_thing(new Circle([windowWidth/2-100, windowHeight/2], [1, 0], 0, 25, CollisionType.DYNAMIC));
-    // scene.add_thing(new Circle([windowWidth/2, windowHeight/2-20], 0, 0, 25, CollisionType.DYNAMIC));
-    // scene.add_thing(new Circle([windowWidth/2, windowHeight/2+20], 0, 0, 25, CollisionType.DYNAMIC));
-
-    // scene.add_thing(new Circle([windowWidth/2-100, windowHeight/2+400], [1, 0], 0, 25, CollisionType.DYNAMIC));
-    // scene.add_thing(new Circle([windowWidth/2, windowHeight/2+400], 0, 0, 25, CollisionType.DYNAMIC));
-    // scene.add_thing(new Circle([windowWidth/2+150, windowHeight/2+400], [-2, 0], 0, 25, CollisionType.DYNAMIC));
-
-    // scene.add_thing(new Circle([windowWidth/2+150, windowHeight/2+99], 0, 0, 25, CollisionType.DYNAMIC));
-    // scene.add_thing(new Wall([windowWidth/2+150, windowHeight/2+150], [windowWidth/2-150, windowHeight/2+200]));
-    // scene.add_thing(new Wall([windowWidth/2+250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
-    // scene.add_thing(new Wall([windowWidth/2-250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
-
-    scene.add_thing(new Wall([windowWidth/2, windowHeight/2+150], [windowWidth/2-150, windowHeight/2+100]));
-    scene.add_thing(new Wall([windowWidth/2, windowHeight/2+50], [windowWidth/2+150, windowHeight/2]));
-
+    // scene_add_ramps();
     scene_add_cup();
+    // scene_add_tests();
 
     frameRate(60);
     smooth();
@@ -88,6 +65,11 @@ function draw(){
     hud();
 }
 
+function scene_add_ramps(){
+    scene.add_thing(new Wall([windowWidth/2, windowHeight/2+150], [windowWidth/2-150, windowHeight/2+100]));
+    scene.add_thing(new Wall([windowWidth/2, windowHeight/2+50], [windowWidth/2+150, windowHeight/2]));
+}
+
 function scene_add_cup(){
     scene.add_thing(new Wall([windowWidth/2+100, windowHeight/2+300], [windowWidth/2-100, windowHeight/2+300]));
     scene.add_thing(new Wall([windowWidth/2+100, windowHeight/2+300], [windowWidth/2+100, windowHeight/2+200]));
@@ -101,6 +83,25 @@ function scene_add_cup(){
     scene.add_thing(new Wall([windowWidth/2-120, windowHeight/2+200], [windowWidth/2-100, windowHeight/2+200]));
 }
 
+function scene_add_tests(){
+    scene.add_thing(new Circle([windowWidth/2-100, windowHeight/2-400], [1, 0], 0, 25, CollisionType.DYNAMIC));
+    scene.add_thing(new Circle([windowWidth/2, windowHeight/2-400], 0, 0, 25, CollisionType.DYNAMIC));
+    scene.add_thing(new Circle([windowWidth/2+50, windowHeight/2-400], 0, 0, 25, CollisionType.DYNAMIC));
+
+    scene.add_thing(new Circle([windowWidth/2-100, windowHeight/2], [1, 0], 0, 25, CollisionType.DYNAMIC));
+    scene.add_thing(new Circle([windowWidth/2, windowHeight/2-20], 0, 0, 25, CollisionType.DYNAMIC));
+    scene.add_thing(new Circle([windowWidth/2, windowHeight/2+20], 0, 0, 25, CollisionType.DYNAMIC));
+
+    scene.add_thing(new Circle([windowWidth/2-100, windowHeight/2+400], [1, 0], 0, 25, CollisionType.DYNAMIC));
+    scene.add_thing(new Circle([windowWidth/2, windowHeight/2+400], 0, 0, 25, CollisionType.DYNAMIC));
+    scene.add_thing(new Circle([windowWidth/2+150, windowHeight/2+400], [-2, 0], 0, 25, CollisionType.DYNAMIC));
+
+    scene.add_thing(new Circle([windowWidth/2+150, windowHeight/2+99], 0, 0, 25, CollisionType.DYNAMIC));
+    scene.add_thing(new Wall([windowWidth/2+150, windowHeight/2+150], [windowWidth/2-150, windowHeight/2+200]));
+    scene.add_thing(new Wall([windowWidth/2+250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
+    scene.add_thing(new Wall([windowWidth/2-250, windowHeight/2], [windowWidth/2, windowHeight/2+250]));
+}
+
 function scene_add_objects(){
     if(scene.things.length < 50){
         scene.add_thing(new Circle([windowWidth/2+75, windowHeight/2], 0, 0, random(5,15), CollisionType.DYNAMIC));
@@ -108,9 +109,6 @@ function scene_add_objects(){
         scene.add_thing(new Circle([windowWidth/2, windowHeight/2+75], 0, 0, random(5,15), CollisionType.DYNAMIC));
         scene.add_thing(new Circle([windowWidth/2, windowHeight/2-75], 0, 0, random(5,15), CollisionType.DYNAMIC));
         scene.add_thing(new Circle([windowWidth/2, windowHeight/2], 0, 0, random(5,15), CollisionType.DYNAMIC));
-        // scene.add_thing(new Circle([windowWidth/2, windowHeight*2/3], 0, 0, 5, CollisionType.DYNAMIC));
-        // scene.add_thing(new Circle([random(windowWidth/4), random(windowHeight)], 0, 0, random(1, 50), CollisionType.DYNAMIC));
-        // scene.add_thing(new Circle([random(windowWidth*3/4,windowWidth), random(windowHeight)], 0, 0, random(1, 50), CollisionType.DYNAMIC));
     }
 }
 
@@ -130,7 +128,7 @@ function keyPressed(){
     }else if(keyCode === 71){ //g
         toggleGravity = !toggleGravity;
         scene.toggle_gravity(toggleGravity);
-    }else if (keyCode === 88){
+    }else if (keyCode === 88){ //x
         toggleHighlightCollidingGroups = !toggleHighlightCollidingGroups;
     }else if (keyCode === 32){ //space
         togglePause = !togglePause;
@@ -146,7 +144,7 @@ function hud(){
     noStroke();
     text(frameRate().toFixed(1), 20, 20);
     
-    if(!document.isMobileOrTabletView){
+    if(!document.isMobileOrTabletView){ //show hud only on desktop
         if(toggleDebug){    
             textAlign(CENTER);
             text("d - Debug | s - Scene Graph Type | g - Toggle Gravity | x - Show Collision Groups", width/2, height-20);

@@ -1,6 +1,7 @@
-class ThingCollider{
+class Collider{
     constructor(friction){
-        this.friction = friction;
+        this.friction = friction; //TODO: ELASTICITY
+        this.elasticity = friction;
     }
 
     check_collision(a, b){
@@ -26,6 +27,10 @@ class ThingCollider{
                     case ThingType.LINE:
                         this.circle_line(a, b, intersection);
                         return;
+
+                    case ThingType.RECT:
+                        this.
+                        return;
                 
                     default:
                         return;
@@ -41,10 +46,114 @@ class ThingCollider{
                     default:
                         return;
                 }
+            
+            case ThingType.RECT:
+                switch(b.thingType){
+                    case ThingType.CIRCLE:
+                        this.
+                        return;
+                    
+                    default:
+                        return;
+                }
 
             default:
                 return;
         }
+    }
+
+    circle_circle_updated(a, b){
+        let intersection = this.separate_pair(a, b);
+        
+        if(!intersection) return; //both static -> don't collide
+
+        this.collide_pair(a, b, intersection);
+    }
+
+    collide_pair(a, b, intersection){
+        let aStatic = (a.collisionType === CollisionType.STATIC);
+        let bStatic = (b.collisionType === CollisionType.STATIC);
+
+        let aUpdatedVel = a.vel.copy().add(a.rotVel)
+        let bUpdatedVel = b.vel.copy().add(b.rotVel) //???????
+        
+        let collisionNormal = a.pos.copy().sub(b.pos).normalize();
+        let velDiff = aUpdatedVel.copy().sub(bUpdatedVel);
+
+        let jTop = -(1 + this.elasticity) * velDiff.dot(collisionNormal);
+
+        let massInvSum = (1 / a.mass) + (1 / b.mass);
+
+        let aCollisionArm = intersection.copy().sub(a.pos);
+        let bCollisionArm = intersection.copy().sub(b.pos);
+
+        let aAugMassInertia = aCollisionArm.cross(collisionNormal);
+        let bAugMassInertia = bCollisionArm.cross(collisionNormal);
+
+        let augMassInertia = aAugMassInertia.copy().mult(a.rotInertiaInv).dot(aAugMassInertia) + bAugMassInertia.copy().mult(b.rotInertiaInv).dot(bAugMassInertia);
+
+        let jBot = massInvSum + augMassInertia;
+        let j = jTop / jBot;
+
+
+        let aNewRotVel = a.rotVel(aCollisionArm.copy().cross(collisionNormal.copy().mult(j)).mult(a.rotInertiaInv)); //????????
+
+        let aNewVel = a.vel.copy().add(collisionNormal.copy().mult(j / a.mass));
+        let bNewVel = b.vel.copy().sub(collisionNormal.copy().mult(j / b.mass));
+
+        if(!aStatic){
+            a.set_vel(aNewVel);
+        }
+        if(!bStatic){
+            b.set_vel(bNewVel);
+        }
+    }
+
+    separate_pair(a, b){ //TODO – use separating axis (GJK OR SAT) to separate, return collision point
+        let aStatic = (a.collisionType === CollisionType.STATIC);
+        let bStatic = (b.collisionType === CollisionType.STATIC);
+
+        if(aStatic && bStatic) return false; //both static -> don't collide
+
+        let prePosDiff = a.pos.copy().sub(b.pos);
+        
+        if(prePosDiff.magSq() < 1e-6){ //add random noise if objects spawn exactly on each other
+            let shiftAxis = random_vec().setMag(1e-4);
+
+            if(!(aStatic || bStatic)){ //neither are static (at this point can't have both static)
+                let aNewShiftPos = a.pos.copy().add(shiftAxis);
+                a.set_pos(aNewShiftPos);
+                let bNewShiftPos = b.pos.copy().sub(shiftAxis);
+                b.set_pos(bNewShiftPos);
+            }else if(!aStatic){ //if A is not static
+                let newShiftPos = a.pos.copy().add(random_vec().setMag(1e-3));
+                a.set_pos(newShiftPos);
+            }else{ //if B is not static
+                let newShiftPos = b.pos.copy().add(random_vec().setMag(1e-3));
+                b.set_pos(newShiftPos);
+            }
+
+            prePosDiff = a.pos.copy().sub(b.pos);
+        }
+        
+        let overlap = prePosDiff.setMag(prePosDiff.mag() - a.rad - b.rad);
+
+        if(!(aStatic || bStatic)){
+            overlap.mult(0.5);
+        }
+
+        if(!aStatic){
+            let aNewPos = a.pos.copy().sub(overlap);
+            a.set_pos(aNewPos);
+        }
+        if(!bStatic){
+            let bNewPos = b.pos.copy().add(overlap);
+            b.set_pos(bNewPos);
+        }
+
+        let collisionNormalARad = b.pos.copy().sub(a.pos).setMag(a.rad);
+        let collisionPoint = a.pos.copy().add(collisionNormalARad);
+        return collisionPoint;
     }
 
     circle_circle(a, b){
@@ -61,19 +170,19 @@ class ThingCollider{
         
         if(!(aStatic || bStatic)){ //neither are static
             if(prePosDiff.magSq() < 1e-6){ //add random noise if objects spawn exactly on each other
-                let newShiftPos = b.pos.copy().add(p5.Vector.random2D().setMag(1e-3));
+                let newShiftPos = b.pos.copy().add(random_vec().setMag(1e-3));
                 b.set_pos(newShiftPos);
                 console.log("shifting");
             }
         }else if(aStatic){
             if(prePosDiff.magSq() < 1e-6){
-                let newShiftPos = b.pos.copy().add(p5.Vector.random2D().setMag(1e-3));
+                let newShiftPos = b.pos.copy().add(random_vec().setMag(1e-3));
                 b.set_pos(newShiftPos);
                 console.log("shifting");
             }
         }else if(bStatic){
             if(prePosDiff.magSq() < 1e-6){
-                let newShiftPos = a.pos.copy().add(p5.Vector.random2D().setMag(1e-3));
+                let newShiftPos = a.pos.copy().add(random_vec().setMag(1e-3));
                 a.set_pos(newShiftPos);
                 console.log("shifting");
             }
@@ -132,7 +241,7 @@ class ThingCollider{
 
     circle_line(circle, b, intersection){
         //Intersection point between circle and line is closest point on line OR line endpoints (if circle resides on endpoints)
-        //Assumes lines are always STATIC for now
+        //Assumes lines are always Walls for now
 
         //If circle is static then don't collide
         if(circle.collisionType === CollisionType.STATIC) return;
@@ -196,9 +305,5 @@ class ThingCollider{
 
 
         return true;
-    }
-
-    circle_line_group(circle, lineGroup){
-
     }
 }

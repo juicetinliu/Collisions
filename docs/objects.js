@@ -25,6 +25,7 @@ class Thing{
         this.vel = to_2d_vector(vel);
         this.acc = to_2d_vector(acc);
         this.mass = mass;
+        
         this.thingType = thingType;
         this.collisionType = collisionType;
         this.ogCollisionType = collisionType;
@@ -56,17 +57,17 @@ class Thing{
         this.boundingBox.draw();
     }
 
-    fill_stroke(f = -1, s = 255, sw = 1){
-        if(s === -1){
+    fill_stroke(fillColor = -1, strokeColor = 255, strokeThickness = 1){
+        if(strokeColor === -1){
             noStroke();
         }else{
-            stroke(s);
+            stroke(strokeColor);
+            strokeWeight(strokeThickness);
         }
-        strokeWeight(sw);
-        if(f === -1){
+        if(fillColor === -1){
             noFill();
         }else{
-            fill(f);
+            fill(fillColor);
         }
     }
 
@@ -174,8 +175,8 @@ class Thing{
         this.highlighted = false;
     }
 
-    equals(o){
-        return this === o;
+    equals(otherThing){
+        return this === otherThing;
     };
 }
 
@@ -258,27 +259,25 @@ class Line extends Thing{
 
 class Wall extends Line{
     constructor(posA = [0, 0], posB = [10, 10]){
-        super(posA, posB);
+        super(posA, posB, 0, 0, 0, CollisionType.STATIC);
     }
 }
 
 class Circle extends Thing{
-    constructor(pos = [0, 0], vel = [0, 0], acc = [0, 0], rad = 10, collisionType = CollisionType.STATIC, mass = rad){
-        super(pos, vel, acc, mass, ThingType.CIRCLE, collisionType);
+    constructor(pos = [0, 0], vel = [0, 0], acc = [0, 0], rad = 10, collisionType = CollisionType.STATIC, mass = 100 * PI){
+        let calcMass = rad * rad * PI;
+        super(pos, vel, acc, calcMass, ThingType.CIRCLE, collisionType);
         this.rad = rad;
         this.boundingBox = new AABB(this.pos.x, this.pos.y, rad*2, rad*2);
+
+        this.rotInertia = this.mass * this.rad * this.rad / 2; //https://en.wikipedia.org/wiki/List_of_moments_of_inertia
+        this.rotInertiaInv = (mass === 0) ? 0 : 1 / this.rotInertia;
     }
 
     draw(f = -1, s = 255, sw = 1){
         super.draw();
         this.collisionType === CollisionType.STATIC ? this.fill_stroke(max(f, 100), s, sw) : this.fill_stroke(f, s, sw);
         draw_ellipse_vec(this.pos, this.rad);
-        // if(this.vel.magSq() === 0){
-        //     draw_ellipse_vec(this.pos, this.rad/4);
-        // }else{
-        //     draw_line_vec(this.pos, this.pos.copy().add(this.vel.copy().mult(100)));
-        //     // text(this.vel.magSq(), this.pos.x, this.pos.y);
-        // }
     }
 
     get_bounding_box_area(){
@@ -310,16 +309,21 @@ class Circle extends Thing{
 }
 
 class Rect extends Thing{
-    constructor(pos = [0, 0], dims = [10, 10], vel = [0, 0], acc = [0, 0], mass = 0, collisionType = CollisionType.STATIC){
-        super(pos, vel, acc, mass, ThingType.RECT, collisionType);
+    constructor(pos = [0, 0], dims = [10, 10], vel = [0, 0], acc = [0, 0], collisionType = CollisionType.STATIC, mass = 100){
         this.dims = to_2d_vector(dims);
+        let calcMass = this.dims.x * this.dims.y;
+        super(pos, vel, acc, calcMass, ThingType.RECT, collisionType);
         this.boundingBox = new AABB(this.pos.x, this.pos.y, this.dims.x, this.dims.y);
+
+        this.rot = 0; //radians
+        this.rotvel = 0; //radians per step
+        this.rotInertia = this.mass * (this.dims.copy().dot(this.dims)) / 12; //https://en.wikipedia.org/wiki/List_of_moments_of_inertia
+        this.rotInertiaInv = (this.mass === 0) ? 0 : 1 / this.rotInertia;
     }
 
     draw(f = -1, s = 255, sw = 1){
         super.draw();
         this.fill_stroke(f, s, sw);
-        let p = this.pos;
         draw_rect_center_vec(this.pos, this.dims);
     }
 
@@ -345,45 +349,4 @@ class Rect extends Thing{
     mouse_within(){
         return intersect_point_rect(createVector(mouseX, mouseY), this.pos, this.dims);
     }
-}
-
-function to_2d_vector(inp){
-    if(!Array.isArray(inp)){
-        if(typeof inp === 'number'){
-            return createVector(inp, inp);
-        }
-    }else{
-        if(inp.length === 2){
-            return createVector(...inp);
-        }
-    }
-    console.error("input should be a number or an array of length 2; defaulting to [0, 0] vector");
-    return createVector(0, 0);
-}
-
-function abs_vec(vector){
-    return createVector(abs(vector.x), abs(vector.y));
-}
-
-function draw_line_vec(pointA, pointB){
-    line(pointA.x, pointA.y, pointB.x, pointB.y);
-}
-
-function draw_ellipse_vec(center, radius){
-    ellipse(center.x, center.y, radius*2, radius*2);
-}
-
-function draw_rect_center_vec(center, dims){
-    rectMode(CENTER);
-    rect(center.x, center.y, dims.x, dims.y);
-}
-
-function draw_rect_corner_vec(cornerTl, dims){
-    rectMode(CORNER);
-    rect(cornerTl.x, cornerTl.y, dims.x, dims.y);
-}
-
-function draw_rect_corners_vec(cornerTl, cornerBr){
-    rectMode(CORNERS);
-    rect(cornerTl.x, cornerTl.y, cornerBr.x, cornerBr.y);
 }

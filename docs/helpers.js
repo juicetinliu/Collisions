@@ -195,3 +195,58 @@ function object_list_remove_duplicates(l){
 function object_list_contains(l, o){
     return l.reduce((a, b) => a || b.equals(o), false);
 }
+
+
+//Vector functions
+function to_2d_vector(inp){
+    if(!Array.isArray(inp)){
+        if(typeof inp === 'number'){
+            return createVector(inp, inp);
+        }
+    }else{
+        if(inp.length === 2){
+            return createVector(...inp);
+        }
+    }
+    console.error("input should be a number or an array of length 2; defaulting to [0, 0] vector");
+    return createVector(0, 0);
+}
+
+function abs_vec(vector){
+    return createVector(abs(vector.x), abs(vector.y));
+}
+
+function random_vec(){
+    return p5.Vector.random2D();
+}
+
+function draw_line_vec(pointA, pointB){
+    line(pointA.x, pointA.y, pointB.x, pointB.y);
+}
+
+function draw_ellipse_vec(center, radius){
+    ellipse(center.x, center.y, radius*2, radius*2);
+}
+
+function draw_rect_center_vec(center, dims){
+    rectMode(CENTER);
+    rect(center.x, center.y, dims.x, dims.y);
+}
+
+function draw_rect_corner_vec(cornerTl, dims){
+    rectMode(CORNER);
+    rect(cornerTl.x, cornerTl.y, dims.x, dims.y);
+}
+
+function draw_rect_corners_vec(cornerTl, cornerBr){
+    rectMode(CORNERS);
+    rect(cornerTl.x, cornerTl.y, cornerBr.x, cornerBr.y);
+}
+
+function min_vec(a, b){
+    return createVector(min(a.x, b.x), min(a.y, b.y));
+}
+
+function max_vec(a, b){
+    return createVector(max(a.x, b.x), max(a.y, b.y));
+}

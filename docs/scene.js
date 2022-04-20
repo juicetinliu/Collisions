@@ -18,12 +18,13 @@ class Scene{
         this.collisionGroups = [];
 
         this.collisionGraph = new QuadTree(this.pos.x, this.pos.y, this.dims.x, this.dims.y);
-        this.collider = new ThingCollider(this.friction);
+        this.collider = new Collider(this.friction);
 
         this.mouseState = 0;
 
         this.selectedThing = null;
         this.selectionVelocity = createVector(0, 0);
+        
         this.stats = {
             checkedCollisions: 0,
             collidingPairs: 0
@@ -50,15 +51,20 @@ class Scene{
         this.hasGravity = toggle;
     }
 
+    //MAIN SCENE LOOP
     render(){
         if(toggleDebug){    
             this.collisionGraph.draw();
         }
+        //Interaction
         this.mouse_interaction();
 
+        //Simulation
         for(let i = 0; i < this.simulationSteps; i++){
             this.run();
         }
+        
+        //Rendering
         // this.things.forEach(thing => thing.highlighted ? thing.draw(128) : thing.draw_with_bounding_box());
         this.things.forEach(thing => thing.highlighted ? thing.draw(128) : thing.draw());
 
@@ -200,7 +206,7 @@ class Scene{
         }
 
         //===========================================================================
-        //FIXES: MULTIPLE REFLECTIONS CAN OCCUR BETWEEN A CIRCLE AND TWO LINES
+        //FIXES: MULTIPLE REFLECTIONS CAN OCCUR BETWEEN A CIRCLE AND TWO WALLS
         //Why this is a problem and more: https://www.myphysicslab.com/engine2D/collision-methods-en.html
         //=========================================================================== 
         let possibleProblematicGroups = [];
@@ -234,14 +240,16 @@ class Scene{
 
         resolvedPairs = resolvedPairs.sort((a, b) => b - a); //sorts from largest to smallest ids
 
-        resolvedPairs.forEach(pairID => { //removes from back to front (since pairIDs already sorted large to small)
+        resolvedPairs.forEach(pairID => { //removes  from back to front (since pairIDs already sorted large to small)
             this.collidedThingPairs.splice(pairID, 1);
         });
         //===========================================================================
 
         //TODO: Fix jittering?
 
+        //sort pairs by pair importance (E.g.: solve static-anything collisions first)
         let collidedThingPairsPrioritySorted = this.collidedThingPairs.sort((a, b) => a.priorityQueueID - b.priorityQueueID);
+        
         //resolve remaining colliding pairs
         collidedThingPairsPrioritySorted.forEach(pair => {
             this.collider.collide(pair.a, pair.b, pair.intersection); 
@@ -338,8 +346,8 @@ class CollidedThingPair{ //Contains a pair of colliding things
     }
 
     generatePriorityQueueID(a, b){
-        if((a.thingType === ThingType.LINE && b.thingType === ThingType.CIRCLE) || (a.thingType === ThingType.CIRCLE && b.thingType === ThingType.LINE)){
-            return 0; //first resolve line circle collisions (FIXES: If two circles hit each other with a line in the middle, multiple collisions occur)
+        if(a.collisionType === CollisionType.STATIC || b.collisionType === CollisionType.STATIC){
+            return 0; //first resolve static-anything collisions (FIXES: If two circles hit each other with a wall in the middle, multiple collisions occur)
         }else{
             return 1;
         }
